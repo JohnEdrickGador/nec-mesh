@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 //************************************************************
 // this is a simple example that uses the painlessMesh library to
 // connect to a another network and relay messages from a MQTT broker to the nodes of the mesh network.
@@ -7,18 +9,19 @@
 // Every message from the mesh which is send to the gateway node will be published to "painlessMesh/from/12345678" where 12345678 
 // is the nodeId from which the packet was send.
 //************************************************************
-
-#include <Arduino.h>
 #include <painlessMesh.h>
 #include <PubSubClient.h>
 #include <WiFiClient.h>
 
-#define   MESH_PREFIX     "whateverYouLike"
+#define   WIFI_CHANNEL    13 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   MESH_PREFIX     "whateveryouwant"
 #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
 
-#define   STATION_SSID     "YourAP_SSID"
-#define   STATION_PASSWORD "YourAP_PWD"
+#define   STATION_SSID     "CARE-MESH"
+#define   STATION_PASSWORD "edrick123"
+
+#define   BRIDGE_NODE
 
 #define HOSTNAME "MQTT_Bridge"
 
@@ -29,7 +32,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length);
 IPAddress getlocalIP();
 
 IPAddress myIP(0,0,0,0);
-IPAddress mqttBroker(192, 168, 1, 1);
+IPAddress mqttBroker(192, 168, 1, 128);
 
 painlessMesh  mesh;
 WiFiClient wifiClient;
@@ -42,30 +45,31 @@ void setup() {
 
   // Channel set to 6. Make sure to use the same channel for your mesh and for you other
   // network (STATION_SSID)
-  mesh.init( MESH_PREFIX, MESH_PASSWORD, MESH_PORT, WIFI_AP_STA, 6 );
+  mesh.init( MESH_PREFIX, MESH_PASSWORD, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
   mesh.onReceive(&receivedCallback);
 
+  #ifdef BRIDGE_NODE
   mesh.stationManual(STATION_SSID, STATION_PASSWORD);
   mesh.setHostname(HOSTNAME);
-
-  // Bridge node, should (in most cases) be a root node. See [the wiki](https://gitlab.com/painlessMesh/painlessMesh/wikis/Possible-challenges-in-mesh-formation) for some background
-  mesh.setRoot(true);
-  // This node and all other nodes should ideally know the mesh contains a root, so call this on all nodes
-  mesh.setContainsRoot(true);
+  #endif
 }
 
 void loop() {
   mesh.update();
+  #ifdef BRIDGE_NODE
   mqttClient.loop();
+  #endif
 
   if(myIP != getlocalIP()){
     myIP = getlocalIP();
     Serial.println("My IP is " + myIP.toString());
 
+    #ifdef BRIDGE_NODE
     if (mqttClient.connect("painlessMeshClient")) {
       mqttClient.publish("painlessMesh/from/gateway","Ready!");
       mqttClient.subscribe("painlessMesh/to/#");
     } 
+    #endif
   }
 }
 
@@ -77,8 +81,8 @@ void receivedCallback( const uint32_t &from, const String &msg ) {
 
 void mqttCallback(char* topic, uint8_t* payload, unsigned int length) {
   char* cleanPayload = (char*)malloc(length+1);
-  memcpy(cleanPayload, payload, length);
-  cleanPayload[length] = '\0';
+  payload[length] = '\0';
+  memcpy(cleanPayload, payload, length+1);
   String msg = String(cleanPayload);
   free(cleanPayload);
 
