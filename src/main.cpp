@@ -13,7 +13,7 @@
 #include <PubSubClient.h>
 #include <WiFiClient.h>
 
-#define   WIFI_CHANNEL    13 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   WIFI_CHANNEL    5 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX     "whateveryouwant"
 #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
@@ -35,8 +35,8 @@ IPAddress myIP(0,0,0,0);
 IPAddress mqttBroker(192, 168, 1, 128);
 
 painlessMesh  mesh;
-WiFiClient wifiClient;
-PubSubClient mqttClient(mqttBroker, 1883, mqttCallback, wifiClient);
+// WiFiClient wifiClient;
+// PubSubClient mqttClient(mqttBroker, 1883, mqttCallback, wifiClient);
 
 void setup() {
   Serial.begin(115200);
@@ -56,66 +56,66 @@ void setup() {
 
 void loop() {
   mesh.update();
-  #ifdef BRIDGE_NODE
-  mqttClient.loop();
-  #endif
+  // #ifdef BRIDGE_NODE
+  // mqttClient.loop();
+  // #endif
 
   if(myIP != getlocalIP()){
     myIP = getlocalIP();
     Serial.println("My IP is " + myIP.toString());
 
-    #ifdef BRIDGE_NODE
-    if (mqttClient.connect("painlessMeshClient")) {
-      mqttClient.publish("painlessMesh/from/gateway","Ready!");
-      mqttClient.subscribe("painlessMesh/to/#");
-    } 
-    #endif
+    // #ifdef BRIDGE_NODE
+    // if (mqttClient.connect("painlessMeshClient")) {
+    //   mqttClient.publish("painlessMesh/from/gateway","Ready!");
+    //   mqttClient.subscribe("painlessMesh/to/#");
+    // } 
+    // #endif
   }
 }
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
   Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
-  String topic = "painlessMesh/from/" + String(from);
-  mqttClient.publish(topic.c_str(), msg.c_str());
+  // String topic = "painlessMesh/from/" + String(from);
+  // mqttClient.publish(topic.c_str(), msg.c_str());
 }
 
-void mqttCallback(char* topic, uint8_t* payload, unsigned int length) {
-  char* cleanPayload = (char*)malloc(length+1);
-  payload[length] = '\0';
-  memcpy(cleanPayload, payload, length+1);
-  String msg = String(cleanPayload);
-  free(cleanPayload);
+// void mqttCallback(char* topic, uint8_t* payload, unsigned int length) {
+//   char* cleanPayload = (char*)malloc(length+1);
+//   payload[length] = '\0';
+//   memcpy(cleanPayload, payload, length+1);
+//   String msg = String(cleanPayload);
+//   free(cleanPayload);
 
-  String targetStr = String(topic).substring(16);
+//   String targetStr = String(topic).substring(16);
 
-  if(targetStr == "gateway")
-  {
-    if(msg == "getNodes")
-    {
-      auto nodes = mesh.getNodeList(true);
-      String str;
-      for (auto &&id : nodes)
-        str += String(id) + String(" ");
-      mqttClient.publish("painlessMesh/from/gateway", str.c_str());
-    }
-  }
-  else if(targetStr == "broadcast") 
-  {
-    mesh.sendBroadcast(msg);
-  }
-  else
-  {
-    uint32_t target = strtoul(targetStr.c_str(), NULL, 10);
-    if(mesh.isConnected(target))
-    {
-      mesh.sendSingle(target, msg);
-    }
-    else
-    {
-      mqttClient.publish("painlessMesh/from/gateway", "Client not connected!");
-    }
-  }
-}
+//   if(targetStr == "gateway")
+//   {
+//     if(msg == "getNodes")
+//     {
+//       auto nodes = mesh.getNodeList(true);
+//       String str;
+//       for (auto &&id : nodes)
+//         str += String(id) + String(" ");
+//       mqttClient.publish("painlessMesh/from/gateway", str.c_str());
+//     }
+//   }
+//   else if(targetStr == "broadcast") 
+//   {
+//     mesh.sendBroadcast(msg);
+//   }
+//   else
+//   {
+//     uint32_t target = strtoul(targetStr.c_str(), NULL, 10);
+//     if(mesh.isConnected(target))
+//     {
+//       mesh.sendSingle(target, msg);
+//     }
+//     else
+//     {
+//       mqttClient.publish("painlessMesh/from/gateway", "Client not connected!");
+//     }
+//   }
+// }
 
 IPAddress getlocalIP() {
   return IPAddress(mesh.getStationIP());
