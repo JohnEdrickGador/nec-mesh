@@ -27,8 +27,8 @@ const char* mqtt_username = "ESP32-Test";
 const char* mqtt_password = "ESP32test01";
 const int mqtt_port = 8883;
 
-const char* publishTopic ="channels/2407401/publish";
-const char* subscribeTopic1 = "channels/2407401/subscribe/fields/field1";   
+const char* publishTopic ="ESP32PubTest";
+const char* subscribeTopic = "ESP32SubTest";   
 
 #define   BRIDGE_NODE
 
@@ -44,15 +44,18 @@ void mqttReconnect();
 IPAddress getlocalIP();
 
 IPAddress myIP(0,0,0,0);
-IPAddress mqttBroker(192, 168, 1, 128);
+// IPAddress mqttBroker(192, 168, 1, 128);
 
 painlessMesh  mesh;
 Scheduler userScheduler;
 
 WiFiClientSecure espClient;
-PubSubClient mqttClient(espClient);
+PubSubClient mqttClient(mqtt_server, mqtt_port, espClient);
 
-/****** root certificate *********/
+//Tasks
+Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
+Task taskPublishMQTT( TASK_SECOND * 20, TASK_FOREVER, &publishMQTT );
+Task taskMQTTReconnect( TASK_SECOND * 5, TASK_FOREVER, &mqttReconnect );
 
 static const char *root_ca PROGMEM = R"EOF(
 -----BEGIN CERTIFICATE-----
@@ -88,11 +91,6 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 )EOF";
 
-//Tasks
-Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
-Task taskPublishMQTT( TASK_SECOND * 20, TASK_FOREVER, &publishMQTT );
-Task taskMQTTReconnect( TASK_SECOND * 5, TASK_FOREVER, &mqttReconnect );
-
 void setup() {
   Serial.begin(115200);
 
@@ -103,16 +101,19 @@ void setup() {
   mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
   mesh.onReceive(&receivedCallback);
 
-  #ifdef BRIDGE_NODE
-  mesh.stationManual(STATION_SSID, STATION_PASSWORD);
-  mesh.setHostname(HOSTNAME);
-  #endif
+  mqttClient.setServer(mqtt_server, mqtt_port);
+  espClient.setCACert(root_ca);
 
   userScheduler.addTask( taskSendMessage );
   userScheduler.addTask( taskPublishMQTT );
   userScheduler.addTask( taskMQTTReconnect );
   taskSendMessage.enable();
   taskPublishMQTT.enable();
+
+  #ifdef BRIDGE_NODE
+  mesh.stationManual(STATION_SSID, STATION_PASSWORD);
+  mesh.setHostname(HOSTNAME);
+  #endif
 }
 
 void loop() {
@@ -124,7 +125,6 @@ void loop() {
   if(myIP != getlocalIP()){
     myIP = getlocalIP();
     Serial.println("My IP is " + myIP.toString());
-
     #ifdef BRIDGE_NODE
     if (!mqttClient.connected()) {
       taskMQTTReconnect.enable();
@@ -132,8 +132,7 @@ void loop() {
       taskMQTTReconnect.disable();
     }
     #endif
-  }
-
+  } 
 }
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
@@ -149,26 +148,26 @@ void sendMessage() {
 void publishMQTT() {
   String payload = "field1=" + String(random(30));
   if (mqttClient.publish(publishTopic, payload.c_str())) {
-    Serial.println("Message Published");
+    Serial.println("Message Published: " + payload);
   }
 }
 
 void mqttReconnect() {
   while (!mqttClient.connected()) {
     Serial.print("Attempting MQTT connection...");
-    if (mqttClient.connect("MB8eHQEuDhkFMToEOTAtCws", "MB8eHQEuDhkFMToEOTAtCws", "AMIReq2rSmRVP3uEw2t9r8L9")) {
+    String clientId = "ESP8266Client-"; //create a random client ID
+    clientId += String(random(0xffff), HEX);
+    //attempt connect
+    if (mqttClient.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
       Serial.println("connected");
-      mqttClient.subscribe(subscribeTopic1);
+      mqttClient.subscribe("test_connect");
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqttClient.state());
-      Serial.println(" try again in 5 seconds");   // Wait 5 seconds before retrying
-      
+      Serial.println(" try again in 5 seconds");
     }
   }
 }
-
-
 
 IPAddress getlocalIP() {
   return IPAddress(mesh.getStationIP());
