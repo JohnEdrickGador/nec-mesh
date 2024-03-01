@@ -1,13 +1,20 @@
 #include <Arduino.h>
-#include <WiFi.h>
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
+#include <painlessMesh.h>
 
+/*Mesh Details*/
+#define   WIFI_CHANNEL    1 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   MESH_PREFIX     "whateveryouwant"
+#define   MESH_PASSWORD   "somethingSneaky"
+#define   MESH_PORT       5555
 
 /****** WiFi Connection Details *******/
-const char* ssid = "Jarvis";
-const char* password = "0n3_Voy@ger!";
+#define   STATION_SSID     "Jarvis"
+#define   STATION_PASSWORD "0n3_Voy@ger!"
+#define   BRIDGE_NODE
+#define   HOSTNAME  "MQTT_Bridge"
 
 /******* MQTT Broker Connection Details *******/
 const char* mqtt_server = "7037541e66a1404980eb5c1c4f000874.s1.eu.hivemq.cloud";
@@ -15,8 +22,28 @@ const char* mqtt_username = "ESP32-Test";
 const char* mqtt_password = "ESP32test01";
 const int mqtt_port = 8883;
 
+const char* publishTopic ="ESP32PubTest";
+const char* subscribeTopic = "ESP32SubTest"; 
+
 /**** Secure WiFi Connectivity Initialisation *****/
 WiFiClientSecure espClient;
+
+/*Prototypes*/
+void receivedCallback( const uint32_t &from, const String &msg );
+void mqttCallback(char* topic, byte* payload, unsigned int length);
+void sendMessage(); // Prototype so PlatformIO doesn't complain
+void publishMQTT();
+
+IPAddress getlocalIP();
+IPAddress myIP(0,0,0,0);
+
+/*Mesh*/
+painlessMesh  mesh;
+Scheduler userScheduler;
+
+/*Tasks*/
+Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
+Task taskPublishMQTT( TASK_SECOND * 20, TASK_FOREVER, &publishMQTT );
 
 /**** MQTT Client Initialisation Using WiFi Connection *****/
 PubSubClient client(espClient);
@@ -61,23 +88,6 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 )EOF";
 
-/************* Connect to WiFi ***********/
-void setup_wifi() {
-  delay(10);
-  Serial.print("\nConnecting to ");
-  Serial.println(ssid);
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  randomSeed(micros());
-  Serial.println("\nWiFi connected\nIP address: ");
-  Serial.println(WiFi.localIP());
-}
 
 /************* Connect to MQTT Broker ***********/
 void reconnect() {
@@ -107,19 +117,61 @@ void publishMessage(const char* topic, String payload , boolean retained){
       Serial.println("Message publised ["+String(topic)+"]: "+payload);
 }
 
+bool isInternet = false;
+
 void setup() {
   Serial.begin(115200);
-  while (!Serial) delay(1);
-  setup_wifi();
 
   espClient.setCACert(root_ca);
   client.setServer(mqtt_server, mqtt_port);
+
+  mesh.setDebugMsgTypes( ERROR | STARTUP | CONNECTION );  // set before init() so that you can see startup messages
+
+  // Channel set to 6. Make sure to use the same channel for your mesh and for you other
+  // network (STATION_SSID)
+  mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
+  mesh.onReceive(&receivedCallback);
+
+  userScheduler.addTask( taskSendMessage );
+  userScheduler.addTask( taskPublishMQTT );
+  taskSendMessage.enable();
+  taskPublishMQTT.enable();
+
+  #ifdef BRIDGE_NODE
+  mesh.stationManual(STATION_SSID, STATION_PASSWORD);
+  mesh.setHostname(HOSTNAME);
+  #endif
 }
 
 void loop() {
-  if (!client.connected()) reconnect(); // check if client is connected
-  client.loop();
+  mesh.update();
+  if(myIP != getlocalIP()) {
+    myIP = getlocalIP();
+    Serial.println("My IP is " + myIP.toString());
+    isInternet = true;
+  }
 
+  if (isInternet == true) {
+    #ifdef BRIDGE_NODE
+    if (!client.connected()) reconnect(); // check if client is connected
+    client.loop();
+    #endif
+  }
+
+  
+}
+
+void receivedCallback( const uint32_t &from, const String &msg ) {
+  Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
+}
+
+void sendMessage() {
+  String msg = "Random number: " + String(random(1,20));
+  mesh.sendBroadcast( msg );
+  taskSendMessage.setInterval( random( TASK_SECOND * 1, TASK_SECOND * 5 ));
+}
+
+void publishMQTT() {
   JsonDocument doc;
   doc["deviceId"] = "ESP32C3-Beetle";
   doc["Site"] = "Edrick House";
@@ -128,8 +180,10 @@ void loop() {
 
   char mqtt_message[128];
   serializeJson(doc, mqtt_message);
-  // String mqtt_message = String(random(1,25));
   publishMessage("esp32_data",mqtt_message,true);
-  delay(5000);
+}
+
+IPAddress getlocalIP() {
+  return IPAddress(mesh.getStationIP());
 }
 
