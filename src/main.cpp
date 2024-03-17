@@ -156,9 +156,7 @@ void loop() {
     if (!client.connected()) reconnect(); // check if client is connected
     client.loop();
     #endif
-  }
-
-  
+  } 
 }
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
@@ -180,7 +178,7 @@ void publishMQTT() {
 
   char mqtt_message[128];
   serializeJson(doc, mqtt_message);
-  publishMessage("esp32_data",mqtt_message,true);
+  publishMessage(publishTopic,mqtt_message,true);
 }
 
 IPAddress getlocalIP() {
