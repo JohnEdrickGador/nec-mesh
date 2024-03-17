@@ -13,7 +13,7 @@
 #include <PubSubClient.h>
 #include <WiFiClient.h>
 
-#define   WIFI_CHANNEL    1 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   WIFI_CHANNEL    116 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX     "whateveryouwant"
 #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
@@ -52,6 +52,8 @@ Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
 Task taskPublishMQTT( TASK_SECOND * 20, TASK_FOREVER, &publishMQTT );
 Task taskMQTTReconnect( TASK_SECOND * 5, TASK_FOREVER, &mqttReconnect );
 
+bool isInternet = false;
+
 void setup() {
   Serial.begin(115200);
 
@@ -76,23 +78,20 @@ void setup() {
 
 void loop() {
   mesh.update();
-  #ifdef BRIDGE_NODE
-  mqttClient.loop();
-  #endif
+  
 
   if(myIP != getlocalIP()){
     myIP = getlocalIP();
     Serial.println("My IP is " + myIP.toString());
-
-    #ifdef BRIDGE_NODE
-    if (!mqttClient.connected()) {
-      taskMQTTReconnect.enable();
-    } else {
-      taskMQTTReconnect.disable();
-    }
-    #endif
+    isInternet = true;
   }
 
+  if (isInternet == true) {
+    #ifdef BRIDGE_NODE
+    if (!mqttClient.connected()) mqttReconnect();
+    mqttClient.loop();
+    #endif
+  }
 }
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
@@ -115,7 +114,7 @@ void publishMQTT() {
 void mqttReconnect() {
   while (!mqttClient.connected()) {
     Serial.print("Attempting MQTT connection...");
-    if (mqttClient.connect("AhAkNAQDMg8cBB01OjcmOQ0", "AhAkNAQDMg8cBB01OjcmOQ0", "W3L+BcOWPGT6/LbG1xBvasAN")) {
+    if (mqttClient.connect("MB8eHQEuDhkFMToEOTAtCws", "MB8eHQEuDhkFMToEOTAtCws", "Q7kXboFPbQIcUbjJrC/j/p3d")) {
       Serial.println("connected");
       mqttClient.subscribe(subscribeTopic1);
     } else {
