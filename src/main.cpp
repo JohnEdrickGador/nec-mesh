@@ -5,14 +5,14 @@
 #include <painlessMesh.h>
 
 /*Mesh Details*/
-#define   WIFI_CHANNEL    1 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   WIFI_CHANNEL    6 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX     "whateveryouwant"
 #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
 
 /****** WiFi Connection Details *******/
-#define   STATION_SSID     "Jarvis"
-#define   STATION_PASSWORD "0n3_Voy@ger!"
+#define   STATION_SSID     "CARE_407"
+#define   STATION_PASSWORD "nec_c@re"
 #define   BRIDGE_NODE
 #define   HOSTNAME  "MQTT_Bridge"
 
@@ -134,8 +134,8 @@ void setup() {
 
   userScheduler.addTask( taskSendMessage );
   userScheduler.addTask( taskPublishMQTT );
-  taskSendMessage.enable();
-  taskPublishMQTT.enable();
+  // taskSendMessage.enable();
+  // taskPublishMQTT.enable();
 
   #ifdef BRIDGE_NODE
   mesh.stationManual(STATION_SSID, STATION_PASSWORD);
@@ -148,6 +148,7 @@ void loop() {
   if(myIP != getlocalIP()) {
     myIP = getlocalIP();
     Serial.println("My IP is " + myIP.toString());
+    Serial.println(mesh.getNodeId());
     isInternet = true;
   }
 
