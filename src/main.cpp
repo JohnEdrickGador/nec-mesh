@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
