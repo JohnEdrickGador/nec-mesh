@@ -164,7 +164,7 @@ void receivedCallback( const uint32_t &from, const String &msg ) {
 }
 
 void sendMessage() {
-  String msg = "Random number: " + String(random(1,20));
+  String msg = "Random number: " + String(random(1,10));
   mesh.sendBroadcast( msg );
   taskSendMessage.setInterval( random( TASK_SECOND * 1, TASK_SECOND * 5 ));
 }
