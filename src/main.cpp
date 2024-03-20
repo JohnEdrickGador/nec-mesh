@@ -160,12 +160,18 @@ void loop() {
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
   Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
+  uint32_t target = 1973942425;
+  if(mesh.sendSingle(target, msg) == 0) {
+    mesh.sendBroadcast(msg);
+  }
 }
 
 void sendMessage() {
   String msg = "Random number: " + String(random(1,20));
   uint32_t target = 1973942425;
-  Serial.println(mesh.sendSingle(target, msg));
+  if (mesh.sendSingle(target, msg) == 0) {
+    mesh.sendBroadcast(msg);
+  }
   taskSendMessage.setInterval( random( TASK_SECOND * 1, TASK_SECOND * 5 ));
 }
 
