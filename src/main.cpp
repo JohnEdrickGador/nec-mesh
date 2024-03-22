@@ -348,10 +348,10 @@ void setup() {
 
     Serial.println("Measuring voltage and current with INA219 ...");
 
-    if (! sgp.begin()){
-      Serial.println("Sensor not found :(");
-      while (1);
-    }
+    // if (! sgp.begin()){
+    //   Serial.println("Sensor not found :(");
+    //   while (1);
+    // }
 
     Serial.print("Found SGP30 serial #");
     Serial.print(sgp.serialnumber[0], HEX);
@@ -363,11 +363,11 @@ void setup() {
       Serial.println("Card Mount Failed");
     }
 
-    File file = SD.open("/log.txt");
+    File file = SD.open("/InitialDeployment.txt");
     if(!file) {
       Serial.println("File doesn't exist");
       Serial.println("Creating file...");
-      writeFile(SD, "/log.txt", "Temperature (°C), Humidity (%), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm), Voltage (V), Power (mW) \r\n");
+      writeFile(SD, "/InitialDeployment.txt", "Temperature (°C), Humidity (%), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm), Voltage (V), Power (mW) \r\n");
     }
     else {
       Serial.println("File already exists");  
@@ -532,11 +532,11 @@ void SD_log() {
   Serial.println(dataMessage);
 
   //Append the data to file
-  appendFile(SD, "/log.txt", dataMessage.c_str());
+  appendFile(SD, "/InitialDeployment.txt", dataMessage.c_str());
 }
 
 void SensorRead() {
-  SGP30_read();
+  // SGP30_read();
   SEN55_read();
   INA219_read();
   SD_log();
