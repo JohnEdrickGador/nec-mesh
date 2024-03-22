@@ -188,7 +188,7 @@ painlessMesh  mesh;
 Scheduler userScheduler;
 
 /*Tasks*/
-Task taskSendMessage( TASK_SECOND * 10 , TASK_FOREVER, &sendMessage );
+Task taskSendMessage( TASK_MINUTE * 2 , TASK_FOREVER, &sendMessage );
 
 /**** MQTT Client Initialisation Using WiFi Connection *****/
 PubSubClient client(espClient);
@@ -271,6 +271,8 @@ void setup() {
   mesh.setHostname(HOSTNAME);
   #endif
 
+  Wire.begin();
+
   sen5x.begin(Wire);
 
   uint16_t error;
@@ -348,11 +350,11 @@ void setup() {
       Serial.println("Card Mount Failed");
     }
 
-    File file = SD.open("/log.txt");
+    File file = SD.open("/TestPhase1.txt");
     if(!file) {
       Serial.println("File doesn't exist");
       Serial.println("Creating file...");
-      writeFile(SD, "/log.txt", "Temperature (°C), Humidity (%), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm), Voltage (V), Power (mW) \r\n");
+      writeFile(SD, "/TestPhase1.txt", "Temperature (°C), Humidity (%), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm), Voltage (V), Power (mW) \r\n");
     }
     else {
       Serial.println("File already exists");  
@@ -532,7 +534,7 @@ void SD_log() {
   Serial.println(dataMessage);
 
   //Append the data to file
-  appendFile(SD, "/log.txt", dataMessage.c_str());
+  appendFile(SD, "/TestPhase1.txt", dataMessage.c_str());
 }
 
 void SensorRead() {
