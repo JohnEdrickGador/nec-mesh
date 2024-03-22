@@ -160,8 +160,27 @@ void loop() {
   } 
 }
 
+
 void receivedCallback( const uint32_t &from, const String &msg ) {
-  Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
+  #ifdef BRIDGE_NODE
+    Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
+    auto nodes = mesh.getNodeList();
+    Serial.println("Current nodes in the mesh are:");
+    for (auto&& id :  nodes) {
+      if (id == from) {
+        Serial.println("SAME ANG SENDER AT YUNG CURRENT ID");
+      }
+    }
+  #else
+    if (mesh.sendSingle(1973942425, msg) == 0) {
+      auto nodes = mesh.getNodeList();
+      Serial.println("Current nodes in the mesh are:");
+      for (auto&& id :  nodes) {
+        Serial.printf("Node ID: %u\n", id);
+      }
+    }
+  #endif
+
 }
 
 void sendMessage() {
