@@ -266,21 +266,6 @@ bool isInternet = false;
 void setup() {
   Serial.begin(115200);
 
-  espClient.setCACert(root_ca);
-  client.setServer(mqtt_server, mqtt_port);
-
-  mesh.setDebugMsgTypes( ERROR | STARTUP | CONNECTION );  // set before init() so that you can see startup messages
-
-  // Channel set to 6. Make sure to use the same channel for your mesh and for you other
-  // network (STATION_SSID)
-  mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
-  mesh.onReceive(&receivedCallback);
-
-  userScheduler.addTask( taskSendMessage );
-  // userScheduler.addTask( taskPublishMQTT );
-  taskSendMessage.enable();
-  // taskPublishMQTT.enable();
-
   #ifdef BRIDGE_NODE
   mesh.stationManual(STATION_SSID, STATION_PASSWORD);
   mesh.setHostname(HOSTNAME);
@@ -348,10 +333,10 @@ void setup() {
 
     Serial.println("Measuring voltage and current with INA219 ...");
 
-    // if (! sgp.begin()){
-    //   Serial.println("Sensor not found :(");
-    //   while (1);
-    // }
+    if (! sgp.begin()){
+      Serial.println("Sensor not found :(");
+      while (1);
+    }
 
     Serial.print("Found SGP30 serial #");
     Serial.print(sgp.serialnumber[0], HEX);
@@ -363,16 +348,31 @@ void setup() {
       Serial.println("Card Mount Failed");
     }
 
-    File file = SD.open("/InitialDeployment.txt");
+    File file = SD.open("/log.txt");
     if(!file) {
       Serial.println("File doesn't exist");
       Serial.println("Creating file...");
-      writeFile(SD, "/InitialDeployment.txt", "Temperature (°C), Humidity (%), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm), Voltage (V), Power (mW) \r\n");
+      writeFile(SD, "/log.txt", "Temperature (°C), Humidity (%), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm), Voltage (V), Power (mW) \r\n");
     }
     else {
       Serial.println("File already exists");  
     }
     file.close();
+
+  espClient.setCACert(root_ca);
+  client.setServer(mqtt_server, mqtt_port);
+
+  mesh.setDebugMsgTypes( ERROR | STARTUP | CONNECTION );  // set before init() so that you can see startup messages
+
+  // Channel set to 6. Make sure to use the same channel for your mesh and for you other
+  // network (STATION_SSID)
+  mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
+  mesh.onReceive(&receivedCallback);
+
+  userScheduler.addTask( taskSendMessage );
+  // userScheduler.addTask( taskPublishMQTT );
+  taskSendMessage.enable();
+  // taskPublishMQTT.enable();
 }
 
 void loop() {
@@ -532,11 +532,11 @@ void SD_log() {
   Serial.println(dataMessage);
 
   //Append the data to file
-  appendFile(SD, "/InitialDeployment.txt", dataMessage.c_str());
+  appendFile(SD, "/log.txt", dataMessage.c_str());
 }
 
 void SensorRead() {
-  // SGP30_read();
+  SGP30_read();
   SEN55_read();
   INA219_read();
   SD_log();
