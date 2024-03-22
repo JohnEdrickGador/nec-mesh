@@ -164,19 +164,44 @@ void loop() {
 void receivedCallback( const uint32_t &from, const String &msg ) {
   #ifdef BRIDGE_NODE
     Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
-    auto nodes = mesh.getNodeList();
-    Serial.println("Current nodes in the mesh are:");
-    for (auto&& id :  nodes) {
-      if (id == from) {
-        Serial.println("SAME ANG SENDER AT YUNG CURRENT ID");
-      }
-    }
+    publishMessage(publishTopic,msg,true);
+    // auto nodes = mesh.subConnectionJson();
+    // DynamicJsonDocument doc(1024 * 6);
+    // DeserializationError error = deserializeJson(doc, nodes);
+
+    // if (error) {
+    //   Serial.print(F("deserializeJson() failed: "));
+    //   Serial.println(error.c_str());
+    //   return;
+    // }
+    // JsonObject topo = doc.as<JsonObject>();
+    // Serial.println(topo);
+    // for (JsonPair kvp :  topo) {
+    //   String nodeId = kvp.key().c_str();
+    //   JsonObject nodeDetails = kvp.value().as<JsonObject>();
+    //   Serial.println("Node ID: " + nodeId);
+
+    //   if (nodeDetails.containsKey("subs")) {
+    //     JsonArray subConnections = nodeDetails["subs"].as<JsonArray>();
+    //     Serial.print("Sub connections for node ");
+    //     Serial.print(nodeId);
+    //     Serial.println(": ");
+
+    //     for (JsonObject subConnection: subConnections) {
+    //       String subNodeId = subConnection["nodeId"].as<String>();
+    //       Serial.println(" Sub-node ID: " + subNodeId);
+    //     }
+    //   }
+    // }
   #else
     if (mesh.sendSingle(1973942425, msg) == 0) {
       auto nodes = mesh.getNodeList();
       Serial.println("Current nodes in the mesh are:");
       for (auto&& id :  nodes) {
-        Serial.printf("Node ID: %u\n", id);
+        if (id != from) {
+          mesh.sendSingle(id, msg);
+          break;
+        }
       }
     }
   #endif
