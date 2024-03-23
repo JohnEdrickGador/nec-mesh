@@ -394,11 +394,21 @@ void loop() {
 }
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
-  Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
-  uint32_t target = 1973942425;
-  if (mesh.sendSingle(target, "Hello world!") == 0) {
-    mesh.sendBroadcast(msg);
-  }
+  #ifdef BRIDGE_NODE
+    Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
+    publishMessage(publishTopic,msg,true);
+  #else
+    if (mesh.sendSingle(1973942425, msg) == 0) {
+      auto nodes = mesh.getNodeList();
+      Serial.println("Current nodes in the mesh are:");
+      for (auto&& id :  nodes) {
+        if (id != from) {
+          mesh.sendSingle(id, msg);
+          break;
+        }
+      }
+    }
+  #endif
 }
 
 void sendMessage() {
