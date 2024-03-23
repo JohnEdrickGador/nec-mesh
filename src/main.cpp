@@ -382,6 +382,7 @@ void loop() {
   if(myIP != getlocalIP()) {
     myIP = getlocalIP();
     Serial.println("My IP is " + myIP.toString());
+    Serial.println(mesh.getNodeId());
     isInternet = true;
   }
 
@@ -392,6 +393,7 @@ void loop() {
     #endif
   } 
 }
+
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
   #ifdef BRIDGE_NODE
