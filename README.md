@@ -63,7 +63,7 @@ git status
 ```
 After running the git status command, I found out that I am in the "hivemq" branch and that the file/s that I altered is/are main.cpp. 
 
-The following are the chain of commands that I executed:
+The following are the chain of commands that I will execute:
 
 ```bash
 git add .
