@@ -412,6 +412,7 @@ void receivedCallback( const uint32_t &from, const String &msg ) {
 }
 
 void sendMessage() {
+
   SensorRead();
 
   JsonDocument doc;
@@ -435,6 +436,7 @@ void sendMessage() {
   else {
     Serial.println("Message sent!");
   }
+
 }
 
 void publishMQTT() {
