@@ -13,6 +13,8 @@
 #include <painlessMesh.h>
 #include <string.h>
 
+#include "time.h"
+
 // The used commands use up to 48 bytes. On some Arduino's the default buffer
 // space is not large enough
 #define MAXBUF_REQUIREMENT 48
@@ -26,6 +28,11 @@
 SensirionI2CSen5x sen5x;
 Adafruit_INA219 ina219;
 Adafruit_SGP30 sgp;
+
+const char* ntpServer1 = "pool.ntp.org";
+const char* ntpServer2 = "time.nist.gov";
+const long  gmtOffset_sec = 28800;
+const int   daylightOffset_sec = 0;
 
 void printModuleVersions() {
     uint16_t error;
@@ -179,6 +186,7 @@ void SGP30_read();
 void INA219_read();
 void SD_log();
 void SensorRead();
+void sendTime();
 
 IPAddress getlocalIP();
 IPAddress myIP(0,0,0,0);
@@ -189,6 +197,7 @@ Scheduler userScheduler;
 
 /*Tasks*/
 Task taskSendMessage( TASK_MINUTE * 2 , TASK_FOREVER, &sendMessage );
+Task taskSendTime( TASK_SECOND * 30 , TASK_FOREVER, &sendTime );
 
 /**** MQTT Client Initialisation Using WiFi Connection *****/
 PubSubClient client(espClient);
@@ -266,9 +275,14 @@ bool isInternet = false;
 void setup() {
   Serial.begin(115200);
 
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
+
   #ifdef BRIDGE_NODE
   mesh.stationManual(STATION_SSID, STATION_PASSWORD);
   mesh.setHostname(HOSTNAME);
+
+  userScheduler.addTask( taskSendTime );
+  taskSendTime.enable();
   #endif
 
   Wire.begin();
@@ -406,15 +420,16 @@ void sendMessage() {
 
   JsonDocument doc;
   doc["deviceId"] = "CARE_Office_1";
-  doc["Site"] = "Care Office";
-  doc["humidity"] = ambientHumidity;
-  doc["temperature"] = ambientTemperature;
-  doc["eCO2"] = CO2;
-  doc["TVOC"] = TVOC;
-  doc["PM2.5"] = massConcentrationPm2p5;
-  doc["PM10"] = massConcentrationPm10p0;
-  doc["Voltage"] = busvoltage;
-  doc["Power"] = power_mW;
+  doc["Source"] = "Care Office";
+  doc["SEN55_RH"] = ambientHumidity;
+  doc["SEN55_TMP"] = ambientTemperature;
+  doc["SGP30_eCO2"] = CO2;
+  doc["SGP30_TVOC"] = TVOC;
+  doc["SEN55_PM2P5"] = massConcentrationPm2p5;
+  doc["SEN55_PM10"] = massConcentrationPm10p0;
+  doc["INA219_VOL"] = busvoltage;
+  doc["INA219_POW"] = power_mW;
+  doc["type"] = "data";
 
   char mqtt_message[512];
   serializeJson(doc, mqtt_message);
@@ -542,4 +557,21 @@ void SensorRead() {
   SEN55_read();
   INA219_read();
   SD_log();
+}
+
+void sendTime() {
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("No time available (yet)");
+    return;
+  }
+
+  char buffer[50]; // Adjust the buffer size as needed
+  strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &timeinfo);
+  
+  String timeString = buffer;
+
+  Serial.println(timeString);
+
+  mesh.sendBroadcast( timeString );
 }
