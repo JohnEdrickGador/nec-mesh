@@ -4,26 +4,34 @@
 #include <ArduinoJson.h>
 #include <painlessMesh.h>
 
+#include <time.h>
+
 /*Mesh Details*/
-#define   WIFI_CHANNEL    1 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   WIFI_CHANNEL    6 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX     "whateveryouwant"
 #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
 
 /****** WiFi Connection Details *******/
-#define   STATION_SSID     "Jarvis"
-#define   STATION_PASSWORD "0n3_Voy@ger!"
+#define   STATION_SSID     "CARE_407"
+#define   STATION_PASSWORD "nec_c@re"
 #define   BRIDGE_NODE
 #define   HOSTNAME  "MQTT_Bridge"
 
 /******* MQTT Broker Connection Details *******/
-const char* mqtt_server = "7037541e66a1404980eb5c1c4f000874.s1.eu.hivemq.cloud";
+const char* mqtt_server = "198e7235f58349c4abe133a3e05ed706.s1.eu.hivemq.cloud";
 const char* mqtt_username = "ESP32-Test";
 const char* mqtt_password = "ESP32test01";
 const int mqtt_port = 8883;
 
 const char* publishTopic ="ESP32PubTest";
 const char* subscribeTopic = "ESP32SubTest"; 
+
+/*Time*/
+const char* ntpServer1 = "pool.ntp.org";
+const char* ntpServer2 = "time.nist.gov";
+const long  gmtOffset_sec = 28800;
+const int   daylightOffset_sec = 0;
 
 /**** Secure WiFi Connectivity Initialisation *****/
 WiFiClientSecure espClient;
@@ -33,6 +41,7 @@ void receivedCallback( const uint32_t &from, const String &msg );
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 void sendMessage(); // Prototype so PlatformIO doesn't complain
 void publishMQTT();
+void sendTime();
 
 IPAddress getlocalIP();
 IPAddress myIP(0,0,0,0);
@@ -44,6 +53,7 @@ Scheduler userScheduler;
 /*Tasks*/
 Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
 Task taskPublishMQTT( TASK_SECOND * 20, TASK_FOREVER, &publishMQTT );
+Task taskSendTime( TASK_SECOND * 30 , TASK_FOREVER, &sendTime );
 
 /**** MQTT Client Initialisation Using WiFi Connection *****/
 PubSubClient client(espClient);
@@ -113,14 +123,18 @@ void reconnect() {
 
 /**** Method for Publishing MQTT Messages **********/
 void publishMessage(const char* topic, String payload , boolean retained){
-  if (client.publish(topic, payload.c_str(), true))
-      Serial.println("Message publised ["+String(topic)+"]: "+payload);
+  if (client.publish(topic, payload.c_str(), true)) {
+    Serial.println("Message publised ["+String(topic)+"]: "+payload);
+  } else {
+    Serial.println("Message is not send");
+  }
 }
 
 bool isInternet = false;
 
 void setup() {
   Serial.begin(115200);
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
 
   espClient.setCACert(root_ca);
   client.setServer(mqtt_server, mqtt_port);
@@ -134,13 +148,16 @@ void setup() {
 
   userScheduler.addTask( taskSendMessage );
   userScheduler.addTask( taskPublishMQTT );
-  taskSendMessage.enable();
-  taskPublishMQTT.enable();
+  userScheduler.addTask( taskSendTime );
+  taskSendTime.enable();
+  // taskSendMessage.enable();
+  // taskPublishMQTT.enable();
 
   #ifdef BRIDGE_NODE
   mesh.stationManual(STATION_SSID, STATION_PASSWORD);
   mesh.setHostname(HOSTNAME);
   #endif
+  pinMode(10, OUTPUT);
 }
 
 void loop() {
@@ -156,11 +173,17 @@ void loop() {
     if (!client.connected()) reconnect(); // check if client is connected
     client.loop();
     #endif
-  } 
+    digitalWrite(10, HIGH);
+  } else {
+    digitalWrite(10,LOW);
+  }
 }
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
-  Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
+  #ifdef BRIDGE_NODE
+    Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
+    publishMessage(publishTopic,msg,true);
+  #endif
 }
 
 void sendMessage() {
@@ -183,5 +206,22 @@ void publishMQTT() {
 
 IPAddress getlocalIP() {
   return IPAddress(mesh.getStationIP());
+}
+
+void sendTime() {
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("No time available (yet)");
+    return;
+  }
+
+  char buffer[50]; // Adjust the buffer size as needed
+  strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &timeinfo);
+  
+  String timeString = buffer;
+
+  Serial.println(timeString);
+
+  mesh.sendBroadcast( timeString );
 }
 
