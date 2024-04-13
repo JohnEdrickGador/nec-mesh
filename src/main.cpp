@@ -14,6 +14,8 @@
 #include "SensirionI2CSen5x.h"
 #include "time.h"
 
+#include <WiFi.h>
+
 /*** Variables ***/
 float massConcentrationPm1p0;
 float massConcentrationPm2p5;
@@ -33,8 +35,9 @@ float current_mA;
 float loadvoltage;
 float power_mW;
 
-float wind_speed;
-float wind_direction;
+float windSpeed;
+float windGust;
+float windDirection;
 
 String dataMessage;
 String time_stamp;
@@ -68,6 +71,8 @@ const long  gmtOffset_sec = 28800;
 const int   daylightOffset_sec = 0;
 
 /*** Weather Underground Cloud details ***/
+// const char* ssid = "PLDTHOMEFIBRe3e58";
+// const char* password = "Florenda@1124";
 const char* API_KEY = "9d4f41efcb5647a58f41efcb56d7a5d3";
 const char* device_id = "IQUEZO15";
 const int   numericPrecision = 2;
@@ -511,6 +516,8 @@ void INA219_read() {
 }
 
 void getAnemometerData() {
+  // Send HTTP request
+  HTTPClient http;
   http.begin(url);
   int httpCode = http.GET();
     
@@ -523,15 +530,23 @@ void getAnemometerData() {
 
     if (error) {
       Serial.println("Failed to parse JSON");
-    }
-    else {
-      // Print parsed JSON data
-      Serial.println("Weather data:");
-      serializeJsonPretty(doc, Serial);
-    }
-  }
+    } else {
+      // Extract wind speed, direction, and gust
+      JsonObject data = doc["observations"][0];
+      windSpeed = data["metric"]["windSpeed"];
+      windGust = data["metric"]["windGust"];
+      windDirection = data["winddir"];
 
-  else {
+      // Print wind data
+      Serial.print("Wind Speed: "); Serial.print(windSpeed); Serial.println(" m/s\r");
+      Serial.print("Wind Gust: "); Serial.print(windGust); Serial.println(" m/s\r");
+      Serial.print("Wind Direction: "); Serial.println(windDirection); Serial.println(" degrees\r");
+
+      // Print parsed JSON data
+      // Serial.println("Complete JSON data:");
+      // serializeJsonPretty(doc, Serial);
+    }
+  } else {
     Serial.print("Error: ");
     Serial.println(httpCode);
   }
@@ -542,7 +557,7 @@ void getAnemometerData() {
 /*** Saving readings to SD card ***/
 void SD_log() {
   //Concatenate all info separated by commas
-  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(wind_speed) + ", " + String(wind_direction) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
+  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(windSpeed) + ", " + String(windGust) + ", " + String(windDirection) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
   Serial.print("Saving data: ");
   Serial.println(dataMessage);
 
