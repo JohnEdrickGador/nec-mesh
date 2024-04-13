@@ -634,7 +634,7 @@ void sendMessage() {
   SEN55_read();
   SGP30_read();
   INA219_read();
-  // getAnemometerData();
+  getAnemometerData();
   SD_log();
 
   JsonDocument doc;
@@ -655,6 +655,11 @@ void sendMessage() {
   JsonArray INA219_data = doc.createNestedArray("INA219_data");
   INA219_data.add(busvoltage);
   INA219_data.add(power_mW);
+
+  JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
+  Urageuxy_data.add(windSpeed);
+  Urageuxy_data.add(windGust);
+  Urageuxy_data.add(windDirection);
 
   doc["type"] = "data";
 
