@@ -15,6 +15,10 @@
 #include "time.h"
 
 #include <WiFi.h>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <algorithm>
 
 /*** Variables ***/
 float massConcentrationPm1p0;
@@ -43,6 +47,23 @@ String dataMessage;
 String time_stamp;
 
 bool isInternet = false;
+
+// AQI
+// Variables
+int Cp;
+float BPhi, BPlo, Ihi, Ilo, AQI;
+float PM25_Ip=999999999, PM10_Ip=999999999, TVOC_Ip=999999999, CO2_Ip=999999999;
+String AQI_description;
+
+// AQI Values and Descriptions
+std::vector<std::vector<int>> AQI_values = {{0, 50}, {51, 100}, {101, 150}, {151, 200}, {201, 300}, {301, 500}};
+std::vector<String> AQI_description_array = {"Green- Good", "Yellow- Moderate", "Orange- Unhealthy for Sensitive Groups", "Red- Unhealthy", "Purple- Very Unhealthy", "Maroon- Hazardous"};
+
+// Breakpoints
+std::vector<std::vector<float>> PM25_breakpoints = {{0.0, 25.0}, {25.1, 35.0}, {35.1, 45.0}, {45.1, 55.0}, {55.1, 90.0}, {91.0, 999999999.0}};  // PM2.5- from DENR
+std::vector<std::vector<int>> PM10_breakpoints = {{0, 54}, {55, 154}, {155, 254}, {255, 354}, {355, 424}, {425, 604}};                          // PM10- from US-EPA
+std::vector<std::vector<int>> CO2_breakpoints = {{0, 500}, {501, 1000}, {1001, 1500}, {1501, 2000}, {2001, 3000}, {3001, 5000}};                // CO2- from US-EPA (Researchgate)
+std::vector<std::vector<int>> TVOC_breakpoints = {{0, 500}, {501, 1000}, {1001, 1500}, {1501, 2000}, {2001, 3000}, {3001, 5000}};                // TVOC- from US-EPA
 
 /*** Mesh Details ***/
 #define   WIFI_CHANNEL    6 //Check the access point on your router for the channel - 6 is not the same for everyone
@@ -91,6 +112,7 @@ void SEN55_read();
 void SGP30_read();
 void INA219_read();
 void getAnemometerData();
+void getAQI();
 void SD_log();
 void receivedCallback( const uint32_t &from, const String &msg );
 // void mqttCallback(char* topic, byte* payload, unsigned int length);
@@ -554,10 +576,87 @@ void getAnemometerData() {
   http.end();
 }
 
+void getAQI() {
+  for (int i=0; i<6; ++i) {
+    float PM25_rounded = std::round(massConcentrationPm2p5 * 10.0f)/ 10.0f;
+    if ((PM25_rounded <= PM25_breakpoints[i][1]) && (PM25_rounded >= PM25_breakpoints[i][0])) { 
+      Cp = std::trunc(massConcentrationPm2p5);
+      BPhi = PM25_breakpoints[i][1];
+      BPlo = PM25_breakpoints[i][0];
+      Ihi = AQI_values[i][1];
+      Ilo = AQI_values[i][0];
+      PM25_Ip = ((Ihi - Ilo) / (BPhi -BPlo)) * (Cp - BPlo) + Ilo;
+    }
+
+    int PM10_rounded = std::round(massConcentrationPm10p0);
+    if ((PM10_rounded <= PM10_breakpoints[i][1]) && (PM10_rounded >= PM10_breakpoints[i][0])) { 
+      Cp = std::trunc(massConcentrationPm10p0);
+      BPhi = PM10_breakpoints[i][1];
+      BPlo = PM10_breakpoints[i][0];
+      Ihi = AQI_values[i][1];
+      Ilo = AQI_values[i][0];
+      PM10_Ip = ((Ihi - Ilo) / (BPhi -BPlo)) * (Cp - BPlo) + Ilo;
+    }
+
+    int CO2_rounded = std::round(CO2);
+    if ((CO2_rounded <= CO2_breakpoints[i][1]) && (CO2_rounded >= CO2_breakpoints[i][0])) { 
+      Cp = std::trunc(CO2);
+      BPhi = CO2_breakpoints[i][1];
+      BPlo = CO2_breakpoints[i][0];
+      Ihi = AQI_values[i][1];
+      Ilo = AQI_values[i][0];
+      CO2_Ip = ((Ihi - Ilo) / (BPhi -BPlo)) * (Cp - BPlo) + Ilo;
+    }
+
+    int TVOC_rounded = std::round(TVOC);
+    if ((TVOC_rounded <= TVOC_breakpoints[i][1]) && (TVOC_rounded >= TVOC_breakpoints[i][0])) { 
+      Cp = std::trunc(TVOC);
+      BPhi = TVOC_breakpoints[i][1];
+      BPlo = TVOC_breakpoints[i][0];
+      Ihi = AQI_values[i][1];
+      Ilo = AQI_values[i][0];
+      TVOC_Ip = ((Ihi - Ilo) / (BPhi -BPlo)) * (Cp - BPlo) + Ilo;
+    }
+  }
+
+  if (PM25_Ip != 999999999 && PM10_Ip != 999999999 && CO2_Ip != 999999999 && TVOC_Ip != 999999999) {
+    // Max
+    float AQI = std::max({PM25_Ip, PM10_Ip, CO2_Ip, TVOC_Ip});
+    for (int i=0; i<6; ++i) {
+      int AQI_rounded = std::round(AQI);
+      if ((AQI_rounded <= AQI_values[i][1]) && (AQI_rounded >= AQI_values[i][0])) {
+        AQI_description = AQI_description_array[i];
+        break;
+      }
+    }
+
+    Serial.print("Pollutant Values: "); Serial.print(PM25); Serial.print(", "); Serial.print(PM10); Serial.print(", "); Serial.print(CO2); Serial.print(", "); Serial.println(TVOC);
+    Serial.print("AQI Indices: "); Serial.print(PM25_Ip); Serial.print(", "); Serial.print(PM10_Ip); Serial.print(", "); Serial.print(CO2_Ip); Serial.print(", "); Serial.println(TVOC_Ip);
+    Serial.print("AQI Value: "); Serial.println(AQI);
+    Serial.print("AQI Description: "); Serial.println(AQI_description);
+  }
+
+  else {
+    if (PM25_Ip == 999999999) {
+      Serial.print("PM2.5");
+    }
+    else if (PM10_Ip == 999999999) {
+      Serial.print(" and PM10");
+    }
+    else if (CO2_Ip == 999999999) {
+      Serial.print(" and CO2");
+    }
+    else if (TVOC_Ip == 999999999) {
+      Serial.print(" and TVOC");
+    }
+    Serial.println(" readings is/are out of range! ERROR!");
+  }
+}
+
 /*** Saving readings to SD card ***/
 void SD_log() {
   //Concatenate all info separated by commas
-  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(windSpeed) + ", " + String(windGust) + ", " + String(windDirection) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
+  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(windSpeed) + ", " + String(windGust) + ", " + String(windDirection) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(AQI) + ", " + String(AQI_description) + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
   Serial.print("Saving data: ");
   Serial.println(dataMessage);
 
@@ -635,6 +734,7 @@ void sendMessage() {
   SGP30_read();
   INA219_read();
   getAnemometerData();
+  getAQI();
   SD_log();
 
   JsonDocument doc;
@@ -660,6 +760,10 @@ void sendMessage() {
   Urageuxy_data.add(windSpeed);
   Urageuxy_data.add(windGust);
   Urageuxy_data.add(windDirection);
+
+  JsonArray AQI_data = doc.createNestedArray("AQI_data");
+  AQI_data.add(AQI);
+  AQI_data.add(AQI_description);
 
   doc["type"] = "data";
 
