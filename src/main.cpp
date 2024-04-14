@@ -1,7 +1,6 @@
 #include <painlessMesh.h>
 #include <WiFi.h>
-#include <vector>
-#include <algorithm>
+#include <map>
 
 #define   WIFI_CHANNEL    11 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX     "test"
@@ -19,21 +18,20 @@ void newConnectionCallback(uint32_t nodeId);
 void changedConnectionCallback();
 void sink_node_election();
 void broadcast_rssi();
-void broadcast_dc();
 void connect_to_wifi();
+void broadcast_status();
 void send_message();
 
-Task taskBroadcastRSSI (TASK_SECOND * 5, TASK_FOREVER, &broadcast_rssi);
-Task taskBroadcastDC (TASK_SECOND * 5, TASK_FOREVER, &broadcast_dc);
+Task taskBroadcastRSSI (TASK_SECOND * 10, TASK_FOREVER, &broadcast_rssi);
 Task taskSendMessage( TASK_MINUTE * 1 , TASK_FOREVER, &send_message );
+Task taskBroadcastStatus(TASK_SECOND * 30 , TASK_FOREVER, &broadcast_status );
 
 painlessMesh  mesh;
 Scheduler userScheduler;
 
 int my_rssi = 0;
-int mesh_size = 4;
-std::vector<int> RSSI_vec;
-std::vector<uint32_t> nodeID_vec;
+int mesh_size = 3;
+std::map<uint32_t, int> nodeRSSIMap;
 int target_idx = 0;
 uint32_t target = 0;
 bool sne_done = false;
@@ -58,7 +56,7 @@ void setup() {
   mesh.onChangedConnections(&changedConnectionCallback);
 
   userScheduler.addTask( taskBroadcastRSSI );
-  userScheduler.addTask( taskBroadcastDC );
+  userScheduler.addTask( taskBroadcastStatus );
   userScheduler.addTask( taskSendMessage );
 
   while(mesh.getNodeList().size() + 1 != mesh_size) {
@@ -71,41 +69,14 @@ void setup() {
 
 void loop() {
   mesh.update();
-  if(sne_done) {
-    if(!mesh.isConnected(target)) {
-      sne_done = false;
-      taskSendMessage.abort();
-      Serial.println("Sink node has been disconnected!");
-      mesh_size = mesh.getNodeList().size() + 1;
-      sink_node_election();
-    }
-
-    // if(mesh.getNodeId() == target) {
-    //   if (WiFi.status() != WL_CONNECTED) {
-    //     taskBroadcastDC.enableIfNot();
-    //     taskBroadcastDC.setIterations(5);
-    //   }
-    // }
-  }
 }
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
   Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
-  if(!sne_done) {
-    if(count(nodeID_vec.begin(), nodeID_vec.end(), from) == 0) {
-      RSSI_vec.push_back(msg.toInt());
-      nodeID_vec.push_back(from);
-      Serial.println("RSSI and nodeID pushed to vector!");
-    }
+  if(!sne_done && msg.toInt() != 0) {
+    nodeRSSIMap.insert({from, msg.toInt()});
+    Serial.println("RSSI and nodeID pushed to map!");
   }
-  
-  // else if (msg == "Disconnected!") {
-  //   sne_done = false;
-  //   taskSendMessage.abort();
-  //   Serial.println("Sink node has been disconnected from the internet!");
-  //   mesh_size = mesh.getNodeList().size() + 1;
-  //   sink_node_election();
-  // }
 }
 
 void newConnectionCallback(uint32_t nodeId) {
@@ -122,6 +93,10 @@ void broadcast_rssi() {
   Serial.println(my_rssi);
 }
 
+void broadcast_status() {
+  mesh.sendBroadcast("I am still connected!");
+}
+
 void connect_to_wifi() {
   mesh.stationManual(STATION_SSID, STATION_PASSWORD);
   mesh.setHostname(HOSTNAME);
@@ -131,45 +106,52 @@ void connect_to_wifi() {
   }
 }
 
-void broadcast_dc() {
-  mesh.sendBroadcast("Disconnected!");
-  Serial.println("Message broadcasted!");
-}
-
 void send_message() {
-  mesh.sendSingle(target, "Hello from the child node!");
-  Serial.println("Message sent!");
+  if(mesh.sendSingle(target, "Hello from the child node!")) {
+    Serial.println("Message sent to the sink node!");
+  }
+  else {
+    Serial.println("Message to the sink node failed to send!");
+  }
 }
 
 void sink_node_election() {
-  RSSI_vec.push_back(my_rssi);
-  nodeID_vec.push_back(mesh.getNodeId());
+  nodeRSSIMap.clear();
   
-  while (RSSI_vec.size() != mesh_size) {
+  nodeRSSIMap.insert({mesh.getNodeId(), my_rssi});
+  
+  while (nodeRSSIMap.size() != mesh_size) {
     taskBroadcastRSSI.enableIfNot();
     mesh.update();
   }
 
-  target_idx = std::max_element(RSSI_vec.begin(), RSSI_vec.end()) - RSSI_vec.begin();
-  target = nodeID_vec[target_idx];
-  Serial.print("Sink node is ");
-  Serial.println(target);
+  int maxRSSI = INT_MIN; // Initialize to the smallest possible integer
 
-  RSSI_vec.clear();
-  nodeID_vec.clear();
+  // Iterate through the map
+  for (const auto& pair : nodeRSSIMap) {
+    // Check if the current RSSI is greater than the maximum RSSI found so far
+    if (pair.second > maxRSSI) {
+      // Update the maximum RSSI and corresponding node ID
+      maxRSSI = pair.second;
+      target = pair.first;
+    }
+  }
 
   sne_done = true;
   Serial.println("Sink node election done!");
+  Serial.println("Sink node is " + String(target));
 
-  taskBroadcastRSSI.setIterations(5);
+  taskBroadcastRSSI.setIterations(1);
 
   if(mesh.getNodeId() == target) {
     connect_to_wifi();
     digitalWrite(10, HIGH);
+    taskBroadcastStatus.enable();
   }
 
   else {
-    taskSendMessage.enableIfNot();
+    taskSendMessage.enableDelayed(30000);
+    mesh.sendBroadcast("My sink node is " + String(target));
     digitalWrite(10, LOW);
   }
 }
