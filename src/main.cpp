@@ -30,7 +30,7 @@ painlessMesh  mesh;
 Scheduler userScheduler;
 
 int my_rssi = 0;
-int mesh_size = 3;
+int mesh_size = 4;
 std::map<uint32_t, int> nodeRSSIMap;
 int target_idx = 0;
 uint32_t target = 0;
@@ -134,6 +134,11 @@ void sink_node_election() {
       // Update the maximum RSSI and corresponding node ID
       maxRSSI = pair.second;
       target = pair.first;
+    }
+    else if (pair.second == maxRSSI) {
+      if (pair.first < target) {
+        target = pair.first;
+      }
     }
   }
 
