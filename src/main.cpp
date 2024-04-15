@@ -3,7 +3,7 @@
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 #include <painlessMesh.h>
-
+#include <HTTPClient.h>
 #include <time.h>
 
 /*Mesh Details*/
@@ -33,6 +33,12 @@ const char* ntpServer2 = "time.nist.gov";
 const long  gmtOffset_sec = 28800;
 const int   daylightOffset_sec = 0;
 
+String url = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
+float windSpeed;
+float windGust;
+float windDirection;
+String timeString;
+
 /**** Secure WiFi Connectivity Initialisation *****/
 WiFiClientSecure espClient;
 
@@ -41,7 +47,9 @@ void receivedCallback( const uint32_t &from, const String &msg );
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 void sendMessage(); // Prototype so PlatformIO doesn't complain
 void publishMQTT();
+void getTime();
 void sendTime();
+void getAnemometerData();
 
 IPAddress getlocalIP();
 IPAddress myIP(0,0,0,0);
@@ -52,7 +60,7 @@ Scheduler userScheduler;
 
 /*Tasks*/
 Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
-Task taskPublishMQTT( TASK_SECOND * 20, TASK_FOREVER, &publishMQTT );
+Task taskPublishMQTT( TASK_SECOND * 60, TASK_FOREVER, &publishMQTT );
 Task taskSendTime( TASK_SECOND * 30 , TASK_FOREVER, &sendTime );
 
 /**** MQTT Client Initialisation Using WiFi Connection *****/
@@ -146,17 +154,18 @@ void setup() {
   mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
   mesh.onReceive(&receivedCallback);
 
+  #ifdef BRIDGE_NODE
+  mesh.stationManual(STATION_SSID, STATION_PASSWORD);
+  mesh.setHostname(HOSTNAME);
+  #endif
+
   userScheduler.addTask( taskSendMessage );
   userScheduler.addTask( taskPublishMQTT );
   userScheduler.addTask( taskSendTime );
   taskSendTime.enable();
   // taskSendMessage.enable();
-  // taskPublishMQTT.enable();
+  taskPublishMQTT.enable();
 
-  #ifdef BRIDGE_NODE
-  mesh.stationManual(STATION_SSID, STATION_PASSWORD);
-  mesh.setHostname(HOSTNAME);
-  #endif
   pinMode(10, OUTPUT);
 }
 
@@ -193,13 +202,44 @@ void sendMessage() {
 }
 
 void publishMQTT() {
+  getAnemometerData();
+  getTime();
   JsonDocument doc;
-  doc["deviceId"] = "ESP32C3-Beetle";
-  doc["Site"] = "Edrick House";
-  doc["humidity"] = random(1,20);
-  doc["temperature"] = random(1,25);
+  // doc["deviceId"] = "ESP32C3-Beetle";
+  // doc["Site"] = "Edrick House";
+  // doc["humidity"] = random(1,20);
+  // doc["temperature"] = random(1,25);
 
-  char mqtt_message[128];
+  doc["deviceId"] = "CARE_Office_IndoorAnemometer";
+  doc["Source"] = "Care Office";
+  doc["local_time"] = timeString;
+
+  JsonArray SEN55_data = doc.createNestedArray("SEN55_data");
+  SEN55_data.add(NAN);
+  SEN55_data.add(NAN);
+  SEN55_data.add(NAN);
+  SEN55_data.add(NAN);
+
+  JsonArray SGP30_data = doc.createNestedArray("SGP30_data");
+  SGP30_data.add(NAN);
+  SGP30_data.add(NAN);
+
+  JsonArray INA219_data = doc.createNestedArray("INA219_data");
+  INA219_data.add(NAN);
+  INA219_data.add(NAN);
+
+  JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
+  Urageuxy_data.add(windSpeed);
+  Urageuxy_data.add(windGust);
+  Urageuxy_data.add(windDirection);
+
+  JsonArray AQI_data = doc.createNestedArray("AQI_data");
+  AQI_data.add(NAN);
+  AQI_data.add(NAN);
+
+  doc["type"] = "data";
+
+  char mqtt_message[1024];
   serializeJson(doc, mqtt_message);
   publishMessage(publishTopic,mqtt_message,true);
 }
@@ -208,7 +248,7 @@ IPAddress getlocalIP() {
   return IPAddress(mesh.getStationIP());
 }
 
-void sendTime() {
+void getTime() {
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo)){
     Serial.println("No time available (yet)");
@@ -218,10 +258,52 @@ void sendTime() {
   char buffer[50]; // Adjust the buffer size as needed
   strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &timeinfo);
   
-  String timeString = buffer;
+  timeString = buffer;
 
   Serial.println(timeString);
-
-  mesh.sendBroadcast( timeString );
 }
 
+void sendTime() {
+  getTime();
+  mesh.sendBroadcast( timeString );
+  Serial.println("Time broadcasted!");
+}
+
+void getAnemometerData() {
+  // Send HTTP request
+  HTTPClient http;
+  http.begin(url);
+  int httpCode = http.GET();
+    
+  if (httpCode == HTTP_CODE_OK) {
+    String payload = http.getString();
+        
+    // Parse JSON response
+    DynamicJsonDocument doc(2048); // Adjust the size according to your response
+    DeserializationError error = deserializeJson(doc, payload);
+
+    if (error) {
+      Serial.println("Failed to parse JSON");
+    } else {
+      // Extract wind speed, direction, and gust
+      JsonObject data = doc["observations"][0];
+      windSpeed = data["metric"]["windSpeed"];
+      windGust = data["metric"]["windGust"];
+      windDirection = data["winddir"];
+
+      // Print wind data
+      Serial.print("Wind Speed: "); Serial.print(windSpeed); Serial.println(" m/s\r");
+      Serial.print("Wind Gust: "); Serial.print(windGust); Serial.println(" m/s\r");
+      Serial.print("Wind Direction: "); Serial.println(windDirection); Serial.println(" degrees\r");
+
+      // Print parsed JSON data
+      // Serial.println("Complete JSON data:");
+      // serializeJsonPretty(doc, Serial);
+    }
+  } else {
+    Serial.print("Error: ");
+    Serial.println(httpCode);
+  }
+
+  http.end();
+}
