@@ -146,7 +146,7 @@ Adafruit_SGP30 sgp;
 
 /*** Tasks ***/
 Task taskSendTime( TASK_SECOND * 30 , TASK_FOREVER, &sendTime );
-Task taskSendMessage( TASK_SECOND * 35 , TASK_FOREVER, &sendMessage );
+Task taskSendMessage( TASK_MINUTE * 2 , TASK_FOREVER, &sendMessage );
 
 // The used commands use up to 48 bytes. On some Arduino's the default buffer space is not large enough
 #define MAXBUF_REQUIREMENT 48
@@ -444,7 +444,7 @@ void SD_init() {
   if(!file) {
     Serial.println("File doesn't exist");
     Serial.println("Creating file...");
-    writeFile(SD, "/TestPhase_3.txt", "Time, Temperature (°C), Humidity (%), Wind Speed (m/s), Wind Direction (°), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm), Voltage (V), Power (mW) \r\n");
+    writeFile(SD, "/TestPhase_3.txt", "Time, Temperature (°C), Humidity (%), Wind Speed (m/s), Wind Direction (°), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm), AQI, AQI Description, Voltage (V), Power (mW) \r\n");
   }
   else {
     Serial.println("File already exists");  
@@ -656,7 +656,7 @@ void getAQI() {
 /*** Saving readings to SD card ***/
 void SD_log() {
   //Concatenate all info separated by commas
-  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(windSpeed) + ", " + String(windGust) + ", " + String(windDirection) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(AQI) + ", " + String(AQI_description) + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
+  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(windSpeed) + ", " + String(windGust) + ", " + String(windDirection) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(AQI) + ", " + AQI_description + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
   Serial.print("Saving data: ");
   Serial.println(dataMessage);
 
@@ -733,7 +733,7 @@ void sendMessage() {
   SEN55_read();
   SGP30_read();
   INA219_read();
-  getAnemometerData();
+  // getAnemometerData();
   getAQI();
   SD_log();
 
@@ -757,9 +757,9 @@ void sendMessage() {
   INA219_data.add(power_mW);
 
   JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
-  Urageuxy_data.add(windSpeed);
-  Urageuxy_data.add(windGust);
-  Urageuxy_data.add(windDirection);
+  Urageuxy_data.add(NAN);
+  Urageuxy_data.add(NAN);
+  Urageuxy_data.add(NAN);
 
   JsonArray AQI_data = doc.createNestedArray("AQI_data");
   AQI_data.add(AQI);
