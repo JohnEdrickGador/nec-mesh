@@ -630,8 +630,8 @@ void getAQI() {
       }
     }
 
-    Serial.print("Pollutant Values: "); Serial.print(PM25); Serial.print(", "); Serial.print(PM10); Serial.print(", "); Serial.print(CO2); Serial.print(", "); Serial.println(TVOC);
-    Serial.print("AQI Indices: "); Serial.print(PM25_Ip); Serial.print(", "); Serial.print(PM10_Ip); Serial.print(", "); Serial.print(CO2_Ip); Serial.print(", "); Serial.println(TVOC_Ip);
+    // Serial.print("Pollutant Values: "); Serial.print(PM25); Serial.print(", "); Serial.print(PM10); Serial.print(", "); Serial.print(CO2); Serial.print(", "); Serial.println(TVOC);
+    Serial.print("AQI Indices (PM2.5, PM10, CO2, TVOC): "); Serial.print(PM25_Ip); Serial.print(", "); Serial.print(PM10_Ip); Serial.print(", "); Serial.print(CO2_Ip); Serial.print(", "); Serial.println(TVOC_Ip);
     Serial.print("AQI Value: "); Serial.println(AQI);
     Serial.print("AQI Description: "); Serial.println(AQI_description);
   }
