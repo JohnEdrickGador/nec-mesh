@@ -444,7 +444,7 @@ void SD_init() {
   if(!file) {
     Serial.println("File doesn't exist");
     Serial.println("Creating file...");
-    writeFile(SD, "/TestPhase_3.txt", "Time, Temperature (°C), Humidity (%), Wind Speed (m/s), Wind Direction (°), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm), Voltage (V), Power (mW), AQI \r\n");
+    writeFile(SD, "/TestPhase_3.txt", "Time, Temperature (°C), Humidity (%), Wind Speed (m/s), Wind Direction (°), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm), AQI, AQI Description, Voltage (V), Power (mW) \r\n");
   }
   else {
     Serial.println("File already exists");  
@@ -656,7 +656,7 @@ void getAQI() {
 /*** Saving readings to SD card ***/
 void SD_log() {
   //Concatenate all info separated by commas
-  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(windSpeed) + ", " + String(windGust) + ", " + String(windDirection) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(AQI) + ", " + String(AQI_description) + ", " + String(busvoltage) + ", " + String(power_mW) + ", " + String(AQI) + "\r\n";
+  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(windSpeed) + ", " + String(windGust) + ", " + String(windDirection) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(AQI) + ", " + AQI_description + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
   Serial.print("Saving data: ");
   Serial.println(dataMessage);
 
