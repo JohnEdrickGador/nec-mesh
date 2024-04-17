@@ -42,9 +42,13 @@ const long  gmtOffset_sec = 28800;
 const int   daylightOffset_sec = 0;
 
 String url = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
+String url1 = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
 float windSpeed;
 float windGust;
 float windDirection;
+float windSpeed1;
+float windGust1;
+float windDirection1;
 String timeString;
 
 /**** Secure WiFi Connectivity Initialisation *****/
@@ -57,7 +61,8 @@ void sendMessage(); // Prototype so PlatformIO doesn't complain
 void publishMQTT();
 void getTime();
 void sendTime();
-void getAnemometerData();
+// void getAnemometerData();
+void getAnemometerData(String url, float &windSpeed, float &windGust, float &windDirection);
 
 IPAddress getlocalIP();
 IPAddress myIP(0,0,0,0);
@@ -210,7 +215,8 @@ void sendMessage() {
 }
 
 void publishMQTT() {
-  getAnemometerData();
+  getAnemometerData(url, windSpeed, windGust, windDirection);
+  getAnemometerData(url1, windSpeed1, windGust1, windDirection1);
   getTime();
   JsonDocument doc;
   // doc["deviceId"] = "ESP32C3-Beetle";
@@ -239,6 +245,9 @@ void publishMQTT() {
   Urageuxy_data.add(std::round(windSpeed * 100.0)/ 100.0);
   Urageuxy_data.add(std::round(windGust * 100.0)/ 100.0);
   Urageuxy_data.add(windDirection);
+  Urageuxy_data.add(std::round(windSpeed1 * 100.0)/ 100.0);
+  Urageuxy_data.add(std::round(windGust1 * 100.0)/ 100.0);
+  Urageuxy_data.add(windDirection1);
 
   JsonArray AQI_data = doc.createNestedArray("AQI_data");
   AQI_data.add(NAN);
@@ -277,7 +286,7 @@ void sendTime() {
   Serial.println("Time broadcasted!");
 }
 
-void getAnemometerData() {
+void getAnemometerData(String url, float &windSpeed, float &windGust, float &windDirection) {
   // Send HTTP request
   HTTPClient http;
   http.begin(url);
