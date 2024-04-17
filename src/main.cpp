@@ -543,11 +543,6 @@ void INA219_read() {
   Serial.print("Power:         "); Serial.print(power_mW); Serial.println(" mW\r");
 }
 
-void getAnemometerDataTrigger() {
-  getAnemometerData(url, windSpeed, windGust, windDirection);
-  getAnemometerData(url1, windSpeed1, windGust1, windDirection1);
-}
-
 void getAnemometerData(String url, float &windSpeed, float &windGust, float &windDirection) {
   // Send HTTP request
   HTTPClient http;
@@ -743,7 +738,8 @@ void sendMessage() {
   SEN55_read();
   SGP30_read();
   INA219_read();
-  // getAnemometerData();
+  // getAnemometerData(url, windSpeed, windGust, windDirection);
+  // getAnemometerData(url1, windSpeed1, windGust1, windDirection1);
   getAQI();
   SD_log();
 
