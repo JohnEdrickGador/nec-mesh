@@ -6,6 +6,12 @@
 #include <HTTPClient.h>
 #include <time.h>
 
+#include <WiFi.h>
+// #include <iostream>
+#include <vector>
+#include <cmath>
+#include <algorithm>
+
 /*Mesh Details*/
 #define   WIFI_CHANNEL    6 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX     "whateveryouwant"
@@ -134,7 +140,7 @@ void publishMessage(const char* topic, String payload , boolean retained){
   if (client.publish(topic, payload.c_str(), true)) {
     Serial.println("Message publised ["+String(topic)+"]: "+payload);
   } else {
-    Serial.println("Message is not send");
+    Serial.println("Message not sent");
   }
 }
 
@@ -210,8 +216,7 @@ void publishMQTT() {
   // doc["humidity"] = random(1,20);
   // doc["temperature"] = random(1,25);
 
-  doc["deviceId"] = "CARE_Office_IndoorAnemometer";
-  doc["Source"] = "Care Office";
+  doc["Source"] = "1";
   doc["local_time"] = timeString;
 
   JsonArray SEN55_data = doc.createNestedArray("SEN55_data");
@@ -229,8 +234,8 @@ void publishMQTT() {
   INA219_data.add(NAN);
 
   JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
-  Urageuxy_data.add(windSpeed);
-  Urageuxy_data.add(windGust);
+  Urageuxy_data.add(std::round(windSpeed * 10.00f)/ 10.00f);
+  Urageuxy_data.add(std::round(windGust * 10.00f)/ 10.00f);
   Urageuxy_data.add(windDirection);
 
   JsonArray AQI_data = doc.createNestedArray("AQI_data");
@@ -241,6 +246,7 @@ void publishMQTT() {
 
   char mqtt_message[1024];
   serializeJson(doc, mqtt_message);
+  Serial.println(mqtt_message);
   publishMessage(publishTopic,mqtt_message,true);
 }
 
