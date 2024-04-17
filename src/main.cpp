@@ -42,6 +42,9 @@ float power_mW;
 float windSpeed;
 float windGust;
 float windDirection;
+float windSpeed1;
+float windGust1;
+float windDirection1;
 
 String dataMessage;
 String time_stamp;
@@ -96,8 +99,11 @@ const int   daylightOffset_sec = 0;
 // const char* password = "Florenda@1124";
 const char* API_KEY = "9d4f41efcb5647a58f41efcb56d7a5d3";
 const char* device_id = "IQUEZO15";
-const int   numericPrecision = 2;
+// const int   numericPrecision = 2;
 String url = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
+const char* API_KEY1 = "9d4f41efcb5647a58f41efcb56d7a5d3";
+const char* device_id1 = "IQUEZO15";
+String url1 = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
 
 /*** Functions ***/
 void printSerialNumber();
@@ -537,7 +543,12 @@ void INA219_read() {
   Serial.print("Power:         "); Serial.print(power_mW); Serial.println(" mW\r");
 }
 
-void getAnemometerData() {
+void getAnemometerDataTrigger() {
+  getAnemometerData(url, windSpeed, windGust, windDirection);
+  getAnemometerData(url1, windSpeed1, windGust1, windDirection1);
+}
+
+void getAnemometerData(String url, float &windSpeed, float &windGust, float &windDirection) {
   // Send HTTP request
   HTTPClient http;
   http.begin(url);
@@ -639,23 +650,23 @@ void getAQI() {
     if (PM25_Ip == 999999999) {
       Serial.print("PM2.5");
     }
-    else if (PM10_Ip == 999999999) {
+    if (PM10_Ip == 999999999) {
       Serial.print(" and PM10");
     }
-    else if (CO2_Ip == 999999999) {
+    if (CO2_Ip == 999999999) {
       Serial.print(" and CO2");
     }
-    else if (TVOC_Ip == 999999999) {
+    if (TVOC_Ip == 999999999) {
       Serial.print(" and TVOC");
     }
-    Serial.println(" readings is/are out of range! ERROR!");
+    Serial.println(" reading/s is/are out of range! ERROR!");
   }
 }
 
 /*** Saving readings to SD card ***/
 void SD_log() {
   //Concatenate all info separated by commas
-  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(windSpeed) + ", " + String(windGust) + ", " + String(windDirection) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(AQI) + ", " + AQI_description + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
+  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(windSpeed) + ", " + String(windGust) + ", " + String(windDirection) + ", " + String(windSpeed1) + ", " + String(windGust1) + ", " + String(windDirection1) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(AQI) + ", " + AQI_description + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
   Serial.print("Saving data: ");
   Serial.println(dataMessage);
 
@@ -759,11 +770,15 @@ void sendMessage() {
   Urageuxy_data.add(NAN);
   Urageuxy_data.add(NAN);
   Urageuxy_data.add(NAN);
+  Urageuxy_data.add(NAN);
+  Urageuxy_data.add(NAN);
+  Urageuxy_data.add(NAN);
 
-  JsonArray AQI_data = doc.createNestedArray("AQI_data");
-  AQI_data.add(AQI);
-  AQI_data.add(AQI_description);
+  // JsonArray AQI_data = doc.createNestedArray("AQI_data");
+  // AQI_data.add(AQI);
+  // AQI_data.add(AQI_description);
 
+  doc["AQI"] = AQI;
   doc["type"] = "data";
 
   String mqtt_message;
