@@ -50,8 +50,8 @@ bool isInternet = false;
 
 // AQI
 // Variables
-int Cp;
-float BPhi, BPlo, Ihi, Ilo, AQI;
+int Cp, AQI;
+float BPhi, BPlo, Ihi, Ilo;
 float PM25_Ip=999999999, PM10_Ip=999999999, TVOC_Ip=999999999, CO2_Ip=999999999;
 String AQI_description;
 
@@ -621,10 +621,9 @@ void getAQI() {
 
   if (PM25_Ip != 999999999 && PM10_Ip != 999999999 && CO2_Ip != 999999999 && TVOC_Ip != 999999999) {
     // Max
-    float AQI = std::max({PM25_Ip, PM10_Ip, CO2_Ip, TVOC_Ip});
+    AQI = std::round(std::max({PM25_Ip, PM10_Ip, CO2_Ip, TVOC_Ip}));
     for (int i=0; i<6; ++i) {
-      int AQI_rounded = std::round(AQI);
-      if ((AQI_rounded <= AQI_values[i][1]) && (AQI_rounded >= AQI_values[i][0])) {
+      if ((AQI <= AQI_values[i][1]) && (AQI >= AQI_values[i][0])) {
         AQI_description = AQI_description_array[i];
         break;
       }
@@ -743,18 +742,18 @@ void sendMessage() {
   doc["local_time"] = time_stamp;
 
   JsonArray SEN55_data = doc.createNestedArray("SEN55_data");
-  SEN55_data.add(std::round(ambientHumidity * 10.00f)/ 10.00f);
-  SEN55_data.add(std::round(ambientTemperature * 10.00f)/ 10.00f);
-  SEN55_data.add(std::round(massConcentrationPm2p5 * 10.00f)/ 10.00f);
-  SEN55_data.add(std::round(massConcentrationPm10p0 * 10.00f)/ 10.00f);
+  SEN55_data.add(std::round(ambientHumidity * 100.0) / 100.0);
+  SEN55_data.add(std::round(ambientTemperature * 100.0) / 100.0);
+  SEN55_data.add(std::round(massConcentrationPm2p5 * 100.0) / 100.0);
+  SEN55_data.add(std::round(massConcentrationPm10p0 * 100.0) / 100.0);
 
   JsonArray SGP30_data = doc.createNestedArray("SGP30_data");
-  SGP30_data.add(std::round(CO2 * 10.00f)/ 10.00f);
-  SGP30_data.add(std::round(TVOC * 10.00f)/ 10.00f);
+  SGP30_data.add(std::round(CO2 * 100.0)/ 100.0);
+  SGP30_data.add(std::round(TVOC * 100.0)/ 100.0);
 
   JsonArray INA219_data = doc.createNestedArray("INA219_data");
-  INA219_data.add(std::round(busvoltage * 10.00f)/ 10.00f);
-  INA219_data.add(std::round(power_mW * 10.00f)/ 10.00f);
+  INA219_data.add(std::round(busvoltage * 100.0)/ 100.0);
+  INA219_data.add(std::round(power_mW * 100.0)/ 100.0);
 
   JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
   Urageuxy_data.add(NAN);
@@ -769,6 +768,7 @@ void sendMessage() {
 
   String mqtt_message;
   serializeJson(doc, mqtt_message);
+  Serial.println(mqtt_message);
   uint32_t target = 1973942425;
   if (mesh.sendSingle(target, mqtt_message) == 0) {
     Serial.println("Message not sent!");
@@ -778,4 +778,8 @@ void sendMessage() {
     Serial.println("Message sent!");
     digitalWrite(10, HIGH);
   }
+}
+
+float roundTo2(float value) {
+    return round(value * 100.0) / 100.0;
 }
