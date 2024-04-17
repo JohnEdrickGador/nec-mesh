@@ -117,7 +117,7 @@ void SD_init();
 void SEN55_read();
 void SGP30_read();
 void INA219_read();
-void getAnemometerData();
+void getAnemometerData(String url, float &windSpeed, float &windGust, float &windDirection);
 void getAQI();
 void SD_log();
 void receivedCallback( const uint32_t &from, const String &msg );
