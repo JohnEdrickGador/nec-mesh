@@ -19,8 +19,10 @@
 #define   MESH_PORT       5555
 
 /****** WiFi Connection Details *******/
-#define   STATION_SSID     "CARE_407"
-#define   STATION_PASSWORD "nec_c@re"
+// #define   STATION_SSID     "CARE_407"
+// #define   STATION_PASSWORD "nec_c@re"
+#define   STATION_SSID     "HUAWEI-2.4G-kCj7_EXT"
+#define   STATION_PASSWORD "dtaY9jsJ"
 #define   BRIDGE_NODE
 #define   HOSTNAME  "MQTT_Bridge"
 
@@ -234,8 +236,8 @@ void publishMQTT() {
   INA219_data.add(NAN);
 
   JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
-  Urageuxy_data.add(std::round(windSpeed * 10.00f)/ 10.00f);
-  Urageuxy_data.add(std::round(windGust * 10.00f)/ 10.00f);
+  Urageuxy_data.add(std::round(windSpeed * 100.0)/ 100.0);
+  Urageuxy_data.add(std::round(windGust * 100.0)/ 100.0);
   Urageuxy_data.add(windDirection);
 
   JsonArray AQI_data = doc.createNestedArray("AQI_data");
