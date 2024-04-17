@@ -743,18 +743,18 @@ void sendMessage() {
   doc["local_time"] = time_stamp;
 
   JsonArray SEN55_data = doc.createNestedArray("SEN55_data");
-  SEN55_data.add(ambientHumidity);
-  SEN55_data.add(ambientTemperature);
-  SEN55_data.add(massConcentrationPm2p5);
-  SEN55_data.add(massConcentrationPm10p0);
+  SEN55_data.add(std::round(ambientHumidity * 10.00f)/ 10.00f);
+  SEN55_data.add(std::round(ambientTemperature * 10.00f)/ 10.00f);
+  SEN55_data.add(std::round(massConcentrationPm2p5 * 10.00f)/ 10.00f);
+  SEN55_data.add(std::round(massConcentrationPm10p0 * 10.00f)/ 10.00f);
 
   JsonArray SGP30_data = doc.createNestedArray("SGP30_data");
-  SGP30_data.add(CO2);
-  SGP30_data.add(TVOC);
+  SGP30_data.add(std::round(CO2 * 10.00f)/ 10.00f);
+  SGP30_data.add(std::round(TVOC * 10.00f)/ 10.00f);
 
   JsonArray INA219_data = doc.createNestedArray("INA219_data");
-  INA219_data.add(busvoltage);
-  INA219_data.add(power_mW);
+  INA219_data.add(std::round(busvoltage * 10.00f)/ 10.00f);
+  INA219_data.add(std::round(power_mW * 10.00f)/ 10.00f);
 
   JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
   Urageuxy_data.add(NAN);
