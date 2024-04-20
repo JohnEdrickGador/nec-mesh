@@ -21,8 +21,10 @@
 /****** WiFi Connection Details *******/
 // #define   STATION_SSID     "CARE_407"
 // #define   STATION_PASSWORD "nec_c@re"
-#define   STATION_SSID     "HUAWEI-2.4G-kCj7_EXT"
-#define   STATION_PASSWORD "dtaY9jsJ"
+// #define   STATION_SSID     "HUAWEI-2.4G-kCj7_EXT"
+// #define   STATION_PASSWORD "dtaY9jsJ"
+#define   STATION_SSID     "PLDTHOMEFIBRe3e58"
+#define   STATION_PASSWORD "Florenda@1124"
 #define   BRIDGE_NODE
 #define   HOSTNAME  "MQTT_Bridge"
 
@@ -75,7 +77,7 @@ Scheduler userScheduler;
 /*Tasks*/
 Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
 Task taskPublishMQTT( TASK_SECOND * 60, TASK_FOREVER, &publishMQTT );
-Task taskPublishMQTT( TASK_SECOND * 60, TASK_FOREVER, &publishMQTT1 );
+Task taskPublishMQTT1( TASK_SECOND * 60, TASK_FOREVER, &publishMQTT1 );
 Task taskSendTime( TASK_SECOND * 30 , TASK_FOREVER, &sendTime );
 
 /**** MQTT Client Initialisation Using WiFi Connection *****/
@@ -249,10 +251,11 @@ void publishMQTT() {
   Urageuxy_data.add(std::round(windGust * 100.0)/ 100.0);
   Urageuxy_data.add(windDirection);
 
-  JsonArray AQI_data = doc.createNestedArray("AQI_data");
-  AQI_data.add(NAN);
-  AQI_data.add(NAN);
+  // JsonArray AQI_data = doc.createNestedArray("AQI_data");
+  // AQI_data.add(NAN);
+  // AQI_data.add(NAN);
 
+  doc["AQI"] = NAN;
   doc["type"] = "data";
 
   char mqtt_message[1024];
@@ -261,7 +264,7 @@ void publishMQTT() {
   publishMessage(publishTopic,mqtt_message,true);
 }
 
-void publishMQTT() {
+void publishMQTT1() {
   // getAnemometerData(url, windSpeed, windGust, windDirection);
   getAnemometerData(url1, windSpeed1, windGust1, windDirection1);
   getTime();
@@ -288,15 +291,16 @@ void publishMQTT() {
   INA219_data.add(NAN);
   INA219_data.add(NAN);
 
-  JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
+  JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data1");
   Urageuxy_data.add(std::round(windSpeed1 * 100.0)/ 100.0);
   Urageuxy_data.add(std::round(windGust1 * 100.0)/ 100.0);
   Urageuxy_data.add(windDirection1);
 
-  JsonArray AQI_data = doc.createNestedArray("AQI_data");
-  AQI_data.add(NAN);
-  AQI_data.add(NAN);
+  // JsonArray AQI_data = doc.createNestedArray("AQI_data");
+  // AQI_data.add(NAN);
+  // AQI_data.add(NAN);
 
+  doc["AQI"] = NAN;
   doc["type"] = "data";
 
   char mqtt_message[1024];
