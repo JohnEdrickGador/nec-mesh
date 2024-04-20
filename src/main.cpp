@@ -97,13 +97,11 @@ const int   daylightOffset_sec = 0;
 /*** Weather Underground Cloud details ***/
 // const char* ssid = "PLDTHOMEFIBRe3e58";
 // const char* password = "Florenda@1124";
-const char* API_KEY = "9d4f41efcb5647a58f41efcb56d7a5d3";
-const char* device_id = "IQUEZO15";
+// const char* API_KEY = "9d4f41efcb5647a58f41efcb56d7a5d3";
+// const char* device_id = "IQUEZO15";
 // const int   numericPrecision = 2;
 String url = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
-const char* API_KEY1 = "9d4f41efcb5647a58f41efcb56d7a5d3";
-const char* device_id1 = "IQUEZO15";
-String url1 = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
+String url1 = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO20&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
 
 /*** Functions ***/
 void printSerialNumber();
@@ -661,7 +659,7 @@ void getAQI() {
 /*** Saving readings to SD card ***/
 void SD_log() {
   //Concatenate all info separated by commas
-  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(windSpeed) + ", " + String(windGust) + ", " + String(windDirection) + ", " + String(windSpeed1) + ", " + String(windGust1) + ", " + String(windDirection1) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(AQI) + ", " + AQI_description + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
+  dataMessage = time_stamp + ", " + String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(windSpeed) + ", " + String(windGust) + ", " + String(windDirection) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(AQI) + ", " + AQI_description + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
   Serial.print("Saving data: ");
   Serial.println(dataMessage);
 
@@ -763,9 +761,6 @@ void sendMessage() {
   INA219_data.add(std::round(power_mW * 100.0)/ 100.0);
 
   JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
-  Urageuxy_data.add(NAN);
-  Urageuxy_data.add(NAN);
-  Urageuxy_data.add(NAN);
   Urageuxy_data.add(NAN);
   Urageuxy_data.add(NAN);
   Urageuxy_data.add(NAN);
