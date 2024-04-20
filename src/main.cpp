@@ -178,7 +178,7 @@ void setup() {
 
   userScheduler.addTask( taskSendMessage );
   userScheduler.addTask( taskPublishMQTT );
-  userScheduler.addTask( taskPublishMQTT1 );
+  // userScheduler.addTask( taskPublishMQTT1 );
   userScheduler.addTask( taskSendTime );
   taskSendTime.enable();
   // taskSendMessage.enable();
