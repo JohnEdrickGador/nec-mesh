@@ -42,7 +42,7 @@ const long  gmtOffset_sec = 28800;
 const int   daylightOffset_sec = 0;
 
 String url = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
-String url1 = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
+String url1 = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO20&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
 float windSpeed;
 float windGust;
 float windDirection;
@@ -59,6 +59,7 @@ void receivedCallback( const uint32_t &from, const String &msg );
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 void sendMessage(); // Prototype so PlatformIO doesn't complain
 void publishMQTT();
+void publishMQTT1();
 void getTime();
 void sendTime();
 // void getAnemometerData();
@@ -74,6 +75,7 @@ Scheduler userScheduler;
 /*Tasks*/
 Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
 Task taskPublishMQTT( TASK_SECOND * 60, TASK_FOREVER, &publishMQTT );
+Task taskPublishMQTT( TASK_SECOND * 60, TASK_FOREVER, &publishMQTT1 );
 Task taskSendTime( TASK_SECOND * 30 , TASK_FOREVER, &sendTime );
 
 /**** MQTT Client Initialisation Using WiFi Connection *****/
@@ -174,6 +176,7 @@ void setup() {
 
   userScheduler.addTask( taskSendMessage );
   userScheduler.addTask( taskPublishMQTT );
+  userScheduler.addTask( taskPublishMQTT1 );
   userScheduler.addTask( taskSendTime );
   taskSendTime.enable();
   // taskSendMessage.enable();
@@ -216,7 +219,7 @@ void sendMessage() {
 
 void publishMQTT() {
   getAnemometerData(url, windSpeed, windGust, windDirection);
-  getAnemometerData(url1, windSpeed1, windGust1, windDirection1);
+  // getAnemometerData(url1, windSpeed1, windGust1, windDirection1);
   getTime();
   JsonDocument doc;
   // doc["deviceId"] = "ESP32C3-Beetle";
@@ -245,6 +248,47 @@ void publishMQTT() {
   Urageuxy_data.add(std::round(windSpeed * 100.0)/ 100.0);
   Urageuxy_data.add(std::round(windGust * 100.0)/ 100.0);
   Urageuxy_data.add(windDirection);
+
+  JsonArray AQI_data = doc.createNestedArray("AQI_data");
+  AQI_data.add(NAN);
+  AQI_data.add(NAN);
+
+  doc["type"] = "data";
+
+  char mqtt_message[1024];
+  serializeJson(doc, mqtt_message);
+  Serial.println(mqtt_message);
+  publishMessage(publishTopic,mqtt_message,true);
+}
+
+void publishMQTT() {
+  // getAnemometerData(url, windSpeed, windGust, windDirection);
+  getAnemometerData(url1, windSpeed1, windGust1, windDirection1);
+  getTime();
+  JsonDocument doc;
+  // doc["deviceId"] = "ESP32C3-Beetle";
+  // doc["Site"] = "Edrick House";
+  // doc["humidity"] = random(1,20);
+  // doc["temperature"] = random(1,25);
+
+  doc["Source"] = "1";
+  doc["local_time"] = timeString;
+
+  JsonArray SEN55_data = doc.createNestedArray("SEN55_data");
+  SEN55_data.add(NAN);
+  SEN55_data.add(NAN);
+  SEN55_data.add(NAN);
+  SEN55_data.add(NAN);
+
+  JsonArray SGP30_data = doc.createNestedArray("SGP30_data");
+  SGP30_data.add(NAN);
+  SGP30_data.add(NAN);
+
+  JsonArray INA219_data = doc.createNestedArray("INA219_data");
+  INA219_data.add(NAN);
+  INA219_data.add(NAN);
+
+  JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
   Urageuxy_data.add(std::round(windSpeed1 * 100.0)/ 100.0);
   Urageuxy_data.add(std::round(windGust1 * 100.0)/ 100.0);
   Urageuxy_data.add(windDirection1);
