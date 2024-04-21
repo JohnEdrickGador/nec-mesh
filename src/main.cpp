@@ -13,7 +13,7 @@
 #include <algorithm>
 
 /*Mesh Details*/
-#define   WIFI_CHANNEL    6 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   WIFI_CHANNEL    1 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX     "whateveryouwant"
 #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
@@ -23,8 +23,8 @@
 // #define   STATION_PASSWORD "nec_c@re"
 // #define   STATION_SSID     "HUAWEI-2.4G-kCj7_EXT"
 // #define   STATION_PASSWORD "dtaY9jsJ"
-#define   STATION_SSID     "PLDTHOMEFIBRe3e58"
-#define   STATION_PASSWORD "Florenda@1124"
+#define   STATION_SSID     "Jarvis"
+#define   STATION_PASSWORD "0n3_Voy@ger!"
 #define   BRIDGE_NODE
 #define   HOSTNAME  "MQTT_Bridge"
 
@@ -156,6 +156,7 @@ void publishMessage(const char* topic, String payload , boolean retained){
 }
 
 bool isInternet = false;
+bool tasksEnabled = false;
 
 void setup() {
   Serial.begin(115200);
@@ -180,9 +181,9 @@ void setup() {
   userScheduler.addTask( taskPublishMQTT );
   // userScheduler.addTask( taskPublishMQTT1 );
   userScheduler.addTask( taskSendTime );
-  taskSendTime.enable();
+  // taskSendTime.enable();
   // taskSendMessage.enable();
-  taskPublishMQTT.enable();
+  // taskPublishMQTT.enable();
 
   pinMode(10, OUTPUT);
 }
@@ -198,6 +199,13 @@ void loop() {
   if (isInternet == true) {
     #ifdef BRIDGE_NODE
     if (!client.connected()) reconnect(); // check if client is connected
+    
+    if (!tasksEnabled) {
+      taskSendTime.enable();
+      taskPublishMQTT.enable();
+      tasksEnabled = true;
+    }
+    
     client.loop();
     #endif
     digitalWrite(10, HIGH);
