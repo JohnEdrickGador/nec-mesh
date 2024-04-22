@@ -13,18 +13,18 @@
 #include <algorithm>
 
 /*Mesh Details*/
-#define   WIFI_CHANNEL    1 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   WIFI_CHANNEL    6 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX     "whateveryouwant"
 #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
 
 /****** WiFi Connection Details *******/
-// #define   STATION_SSID     "CARE_407"
-// #define   STATION_PASSWORD "nec_c@re"
+#define   STATION_SSID     "CARE_407"
+#define   STATION_PASSWORD "nec_c@re"
 // #define   STATION_SSID     "HUAWEI-2.4G-kCj7_EXT"
 // #define   STATION_PASSWORD "dtaY9jsJ"
-#define   STATION_SSID     "Jarvis"
-#define   STATION_PASSWORD "0n3_Voy@ger!"
+// #define   STATION_SSID     "Jarvis"
+// #define   STATION_PASSWORD "0n3_Voy@ger!"
 #define   BRIDGE_NODE
 #define   HOSTNAME  "MQTT_Bridge"
 
@@ -179,11 +179,12 @@ void setup() {
 
   userScheduler.addTask( taskSendMessage );
   userScheduler.addTask( taskPublishMQTT );
-  // userScheduler.addTask( taskPublishMQTT1 );
+  userScheduler.addTask( taskPublishMQTT1 );
   userScheduler.addTask( taskSendTime );
   // taskSendTime.enable();
   // taskSendMessage.enable();
   // taskPublishMQTT.enable();
+  // taskPublishMQTT1.enable();
 
   pinMode(10, OUTPUT);
 }
@@ -202,7 +203,9 @@ void loop() {
     
     if (!tasksEnabled) {
       taskSendTime.enable();
+      taskSendMessage.enable();
       taskPublishMQTT.enable();
+      taskPublishMQTT1.enable();
       tasksEnabled = true;
     }
     
@@ -232,39 +235,55 @@ void publishMQTT() {
   // getAnemometerData(url1, windSpeed1, windGust1, windDirection1);
   getTime();
   JsonDocument doc;
+  doc["Source"] = "1";
+  doc["local_time"] = timeString;
+  doc["TMP"] = String(NAN);
+  doc["RH"] = String(NAN);
+  doc["PM2p5"] = String(NAN);
+  doc["PM10"] = String(NAN);
+  doc["CO2"] = String(NAN);
+  doc["TVOC"] = String(NAN);
+  doc["VOL"] = String(NAN);
+  doc["POW"] = String(NAN);
+  doc["WSPD"] = String(windSpeed);
+  doc["WGUST"] = String(windGust);
+  doc["WDIR"] = String(windDirection);
+  doc["AQI"] = String(NAN);
+  doc["type"] = "data";
+
   // doc["deviceId"] = "ESP32C3-Beetle";
   // doc["Site"] = "Edrick House";
   // doc["humidity"] = random(1,20);
   // doc["temperature"] = random(1,25);
 
-  doc["Source"] = "1";
-  doc["local_time"] = timeString;
+  // doc["Source"] = "1";
+  // doc["local_time"] = timeString;
 
-  JsonArray SEN55_data = doc.createNestedArray("SEN55_data");
-  SEN55_data.add(NAN);
-  SEN55_data.add(NAN);
-  SEN55_data.add(NAN);
-  SEN55_data.add(NAN);
+  // JsonArray SEN55_data = doc.createNestedArray("SEN55_data");
+  // SEN55_data.add(NAN);
+  // SEN55_data.add(NAN);
+  // SEN55_data.add(NAN);
+  // SEN55_data.add(NAN);
 
-  JsonArray SGP30_data = doc.createNestedArray("SGP30_data");
-  SGP30_data.add(NAN);
-  SGP30_data.add(NAN);
+  // JsonArray SGP30_data = doc.createNestedArray("SGP30_data");
+  // SGP30_data.add(NAN);
+  // SGP30_data.add(NAN);
 
-  JsonArray INA219_data = doc.createNestedArray("INA219_data");
-  INA219_data.add(NAN);
-  INA219_data.add(NAN);
+  // JsonArray INA219_data = doc.createNestedArray("INA219_data");
+  // INA219_data.add(NAN);
+  // INA219_data.add(NAN);
 
-  JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
-  Urageuxy_data.add(std::round(windSpeed * 100.0)/ 100.0);
-  Urageuxy_data.add(std::round(windGust * 100.0)/ 100.0);
-  Urageuxy_data.add(windDirection);
+  // JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
+  // Urageuxy_data.add(std::round(windSpeed * 100.0)/ 100.0);
+  // Urageuxy_data.add(std::round(windGust * 100.0)/ 100.0);
+  // Urageuxy_data.add(windDirection);
 
   // JsonArray AQI_data = doc.createNestedArray("AQI_data");
   // AQI_data.add(NAN);
   // AQI_data.add(NAN);
 
-  doc["AQI"] = NAN;
-  doc["type"] = "data";
+  // doc["AQI"] = NAN;
+  // doc["type"] = "data";
 
   char mqtt_message[1024];
   serializeJson(doc, mqtt_message);
@@ -282,33 +301,49 @@ void publishMQTT1() {
   // doc["humidity"] = random(1,20);
   // doc["temperature"] = random(1,25);
 
-  doc["Source"] = "1";
-  doc["local_time"] = timeString;
+  // doc["Source"] = "2";
+  // doc["local_time"] = timeString;
 
-  JsonArray SEN55_data = doc.createNestedArray("SEN55_data");
-  SEN55_data.add(NAN);
-  SEN55_data.add(NAN);
-  SEN55_data.add(NAN);
-  SEN55_data.add(NAN);
+  // JsonArray SEN55_data = doc.createNestedArray("SEN55_data");
+  // SEN55_data.add(NAN);
+  // SEN55_data.add(NAN);
+  // SEN55_data.add(NAN);
+  // SEN55_data.add(NAN);
 
-  JsonArray SGP30_data = doc.createNestedArray("SGP30_data");
-  SGP30_data.add(NAN);
-  SGP30_data.add(NAN);
+  // JsonArray SGP30_data = doc.createNestedArray("SGP30_data");
+  // SGP30_data.add(NAN);
+  // SGP30_data.add(NAN);
 
-  JsonArray INA219_data = doc.createNestedArray("INA219_data");
-  INA219_data.add(NAN);
-  INA219_data.add(NAN);
+  // JsonArray INA219_data = doc.createNestedArray("INA219_data");
+  // INA219_data.add(NAN);
+  // INA219_data.add(NAN);
 
-  JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data1");
-  Urageuxy_data.add(std::round(windSpeed1 * 100.0)/ 100.0);
-  Urageuxy_data.add(std::round(windGust1 * 100.0)/ 100.0);
-  Urageuxy_data.add(windDirection1);
+  // JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data1");
+  // Urageuxy_data.add(std::round(windSpeed1 * 100.0)/ 100.0);
+  // Urageuxy_data.add(std::round(windGust1 * 100.0)/ 100.0);
+  // Urageuxy_data.add(windDirection1);
 
   // JsonArray AQI_data = doc.createNestedArray("AQI_data");
   // AQI_data.add(NAN);
   // AQI_data.add(NAN);
 
-  doc["AQI"] = NAN;
+  // doc["AQI"] = NAN;
+  // doc["type"] = "data";
+
+  doc["Source"] = "2";
+  doc["local_time"] = timeString;
+  doc["TMP"] = String(NAN);
+  doc["RH"] = String(NAN);
+  doc["PM2p5"] = String(NAN);
+  doc["PM10"] = String(NAN);
+  doc["CO2"] = String(NAN);
+  doc["TVOC"] = String(NAN);
+  doc["VOL"] = String(NAN);
+  doc["POW"] = String(NAN);
+  doc["WSPD"] = String(windSpeed1);
+  doc["WGUST"] = String(windGust1);
+  doc["WDIR"] = String(windDirection1);
+  doc["AQI"] = String(NAN);
   doc["type"] = "data";
 
   char mqtt_message[1024];
