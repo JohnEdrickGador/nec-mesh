@@ -4,13 +4,13 @@
 #include <SPI.h>
 #include <SD.h>
 
-#define   WIFI_CHANNEL    9 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   WIFI_CHANNEL    6 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX     "test"
 #define   MESH_PASSWORD   "password"
 #define   MESH_PORT       5555
 
-#define   STATION_SSID     "HG8145V5_7185A"
-#define   STATION_PASSWORD "X7BBwEDt"
+#define   STATION_SSID     "CARE_407"
+#define   STATION_PASSWORD "nec_c@re"
 
 #define   HOSTNAME         "MQTT_Bridge"
 
@@ -31,7 +31,7 @@ painlessMesh  mesh;
 Scheduler userScheduler;
 
 int my_rssi = 0;
-int mesh_size = 4;
+int mesh_size = 3;
 String nodeRSSIString = "";
 std::map<uint32_t, int> nodeRSSIMap;
 uint32_t target = 0;
