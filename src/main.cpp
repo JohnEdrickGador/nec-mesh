@@ -42,9 +42,9 @@ void setup() {
   Serial.begin(115200);
   pinMode(10, OUTPUT);
 
-  while (!SD.begin(0)) {
-    Serial.println("Card Mount Failed");
-  }
+  // while (!SD.begin(0)) {
+  //   Serial.println("Card Mount Failed");
+  // }
 
   // File file = SD.open("/NodeID_RSSI1.txt");
   // if(!file) {
