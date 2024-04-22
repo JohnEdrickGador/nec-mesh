@@ -742,35 +742,50 @@ void sendMessage() {
   SD_log();
 
   JsonDocument doc;
-  doc["deviceId"] = "CARE_Office_1";
-  doc["Source"] = "Care Office";
+  doc["Source"] = "14";
   doc["local_time"] = time_stamp;
+  doc["TMP"] = String(ambientTemperature);
+  doc["RH"] = String(ambientHumidity);
+  doc["PM2p5"] = String(massConcentrationPm2p5);
+  doc["PM10"] = String(massConcentrationPm10p0);
+  doc["CO2"] = String(2000.00);
+  doc["TVOC"] = String(40000.00);
+  doc["VOL"] = String(busvoltage);
+  doc["POW"] = String(1000.00);
+  doc["WSPD"] = String(NAN);
+  doc["WGUST"] = String(NAN);
+  doc["WDIR"] = String(NAN);
+  doc["AQI"] = String(AQI);
+  doc["type"] = "data";
+  // doc["deviceId"] = "CARE_Office_1";
+  // doc["Source"] = "Care Office";
+  // doc["local_time"] = time_stamp;
 
-  JsonArray SEN55_data = doc.createNestedArray("SEN55_data");
-  SEN55_data.add(std::round(ambientHumidity * 100.0) / 100.0);
-  SEN55_data.add(std::round(ambientTemperature * 100.0) / 100.0);
-  SEN55_data.add(std::round(massConcentrationPm2p5 * 100.0) / 100.0);
-  SEN55_data.add(std::round(massConcentrationPm10p0 * 100.0) / 100.0);
+  // JsonArray SEN55_data = doc.createNestedArray("SEN55_data");
+  // SEN55_data.add(std::round(ambientHumidity * 100.0) / 100.0);
+  // SEN55_data.add(std::round(ambientTemperature * 100.0) / 100.0);
+  // SEN55_data.add(std::round(massConcentrationPm2p5 * 100.0) / 100.0);
+  // SEN55_data.add(std::round(massConcentrationPm10p0 * 100.0) / 100.0);
 
-  JsonArray SGP30_data = doc.createNestedArray("SGP30_data");
-  SGP30_data.add(std::round(CO2 * 100.0)/ 100.0);
-  SGP30_data.add(std::round(TVOC * 100.0)/ 100.0);
+  // JsonArray SGP30_data = doc.createNestedArray("SGP30_data");
+  // SGP30_data.add(std::round(CO2 * 100.0)/ 100.0);
+  // SGP30_data.add(std::round(TVOC * 100.0)/ 100.0);
 
-  JsonArray INA219_data = doc.createNestedArray("INA219_data");
-  INA219_data.add(std::round(busvoltage * 100.0)/ 100.0);
-  INA219_data.add(std::round(power_mW * 100.0)/ 100.0);
+  // JsonArray INA219_data = doc.createNestedArray("INA219_data");
+  // INA219_data.add(std::round(busvoltage * 100.0)/ 100.0);
+  // INA219_data.add(std::round(power_mW * 100.0)/ 100.0);
 
-  JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
-  Urageuxy_data.add(NAN);
-  Urageuxy_data.add(NAN);
-  Urageuxy_data.add(NAN);
+  // JsonArray Urageuxy_data = doc.createNestedArray("Urageuxy_data");
+  // Urageuxy_data.add(NAN);
+  // Urageuxy_data.add(NAN);
+  // Urageuxy_data.add(NAN);
 
   // JsonArray AQI_data = doc.createNestedArray("AQI_data");
   // AQI_data.add(AQI);
   // AQI_data.add(AQI_description);
 
-  doc["AQI"] = AQI;
-  doc["type"] = "data";
+  // doc["AQI"] = AQI;
+  // doc["type"] = "data";
 
   String mqtt_message;
   serializeJson(doc, mqtt_message);
