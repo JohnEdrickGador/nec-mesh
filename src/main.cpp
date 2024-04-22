@@ -182,17 +182,19 @@ void sinkNodeElection() {
     // Check if the current RSSI is greater than the maximum RSSI found so far
     if (pair.second > maxRSSI) {
       // Update the maximum RSSI and corresponding node ID
-      if(pair.first == mesh.getNodeId() || (pair.first != mesh.getNodeId() && mesh.isConnected(pair.first))) {
+      if(pair.first == mesh.getNodeId() || (mesh.isConnected(pair.first))) {
         maxRSSI = pair.second;
         target = pair.first;
       }
     }
     else if (pair.second == maxRSSI) {
       if (pair.first < target) {
-        if(pair.first == mesh.getNodeId() || (pair.first != mesh.getNodeId() && mesh.isConnected(pair.first))){target = pair.first;}
+        if(pair.first == mesh.getNodeId() || mesh.isConnected(pair.first)){target = pair.first;}
       }
     }
   }
+
+  nodeRSSIString = "";
 
   sne_done = true;
   Serial.println("Sink node election done!");
