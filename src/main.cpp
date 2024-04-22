@@ -25,7 +25,7 @@ void writeFile(fs::FS &fs, const char * path, const char * message);
 void sendMessage();
 
 Task taskBroadcastRSSI (TASK_SECOND * 10, TASK_FOREVER, &broadcastRSSI);
-Task taskSinkNodeElection (TASK_MINUTE * 1, TASK_FOREVER, &sinkNodeElection );
+Task taskSinkNodeElection (TASK_SECOND * 30, TASK_FOREVER, &sinkNodeElection );
 
 painlessMesh  mesh;
 Scheduler userScheduler;
@@ -42,42 +42,42 @@ void setup() {
   Serial.begin(115200);
   pinMode(10, OUTPUT);
 
-  // while (!SD.begin(0)) {
-  //   Serial.println("Card Mount Failed");
-  // }
+  while (!SD.begin(0)) {
+    Serial.println("Card Mount Failed");
+  }
 
-  // File file = SD.open("/NodeID_RSSI1.txt");
-  // if(!file) {
+  File file = SD.open("/NodeID_RSSI2.txt");
+  if(!file) {
     WiFi.begin(STATION_SSID, STATION_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {}
     Serial.println("Connected to WiFi!");
     my_rssi = WiFi.RSSI();
     WiFi.disconnect();
     Serial.println(my_rssi);
-  // }
-  // else {
-  //   sne_done = true;
-  //   String numberString = "";
-  //   int nodeID = 0;
-  //   int RSSI = 0;
-  //   while (file.available()) {
-  //     char c = file.read();
-  //     if (c == ':') {
-  //       nodeID = numberString.toInt();
-  //       Serial.println(nodeID);
-  //       numberString = "";
-  //     } else if (c == ',') {
-  //       RSSI = numberString.toInt();
-  //       Serial.println(RSSI);
-  //       numberString = "";
-  //       nodeRSSIMap.insert({nodeID, RSSI});
-  //     } 
-  //     else {
-  //       numberString = numberString + c;
-  //     }
-  //   }
-  // }
-  // file.close();
+  }
+  else {
+    sne_done = true;
+    String numberString = "";
+    int nodeID = 0;
+    int RSSI = 0;
+    while (file.available()) {
+      char c = file.read();
+      if (c == ':') {
+        nodeID = numberString.toInt();
+        Serial.println(nodeID);
+        numberString = "";
+      } else if (c == ',') {
+        RSSI = numberString.toInt();
+        Serial.println(RSSI);
+        numberString = "";
+        nodeRSSIMap.insert({nodeID, RSSI});
+      } 
+      else {
+        numberString = numberString + c;
+      }
+    }
+  }
+  file.close();
 
   mesh.setDebugMsgTypes( ERROR | STARTUP | CONNECTION );  // set before init() so that you can see startup messages
 
@@ -200,18 +200,18 @@ void sinkNodeElection() {
   Serial.println("Sink node election done!");
   Serial.println("Sink node is " + String(target));
 
-  // File file = SD.open("/NodeID_RSSI1.txt");
+  File file = SD.open("/NodeID_RSSI2.txt");
 
-  // if(!file) {
-  //   Serial.println("File doesn't exist");
-  //   Serial.println("Creating file...");
-  //   writeFile(SD, "/NodeID_RSSI1.txt", nodeRSSIString.c_str());
-  // }
-  // else {
-  //   Serial.println("File already exists");  
-  // }
+  if(!file) {
+    Serial.println("File doesn't exist");
+    Serial.println("Creating file...");
+    writeFile(SD, "/NodeID_RSSI2.txt", nodeRSSIString.c_str());
+  }
+  else {
+    Serial.println("File already exists");  
+  }
 
-  // file.close();
+  file.close();
 
   if(mesh.getNodeId() == target) {
     connectToWifi();
