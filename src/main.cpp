@@ -25,7 +25,7 @@ void writeFile(fs::FS &fs, const char * path, const char * message);
 void sendMessage();
 
 Task taskBroadcastRSSI (TASK_SECOND * 10, TASK_FOREVER, &broadcastRSSI);
-Task taskSinkNodeElection (TASK_MINUTE * 2, TASK_FOREVER, &sinkNodeElection );
+Task taskSinkNodeElection (TASK_MINUTE * 1, TASK_FOREVER, &sinkNodeElection );
 
 painlessMesh  mesh;
 Scheduler userScheduler;
@@ -100,7 +100,7 @@ void setup() {
 void loop() {
   mesh.update();
   if(!taskSinkNodeElection.isEnabled()){
-    taskSinkNodeElection.enableDelayed(120000);
+    taskSinkNodeElection.enableDelayed(60000);
   }
 }
 
@@ -177,6 +177,7 @@ void sinkNodeElection() {
   // Iterate through the map
   for (const auto& pair : nodeRSSIMap) {
     nodeRSSIString = nodeRSSIString + String(pair.first) + ":" + String(pair.second) + ",";
+    Serial.println(nodeRSSIString);
 
     // Check if the current RSSI is greater than the maximum RSSI found so far
     if (pair.second > maxRSSI) {
