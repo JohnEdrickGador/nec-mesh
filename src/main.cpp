@@ -46,7 +46,7 @@ void setup() {
     Serial.println("Card Mount Failed");
   }
 
-  File file = SD.open("/NodeID_RSSI4.txt");
+  File file = SD.open("/NodeID_RSSI5.txt");
   if(!file) {
     WiFi.begin(STATION_SSID, STATION_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {}
@@ -169,7 +169,7 @@ void sinkNodeElection() {
 
   if(!sne_done) {
     taskBroadcastRSSI.enableIfNot();
-    taskBroadcastRSSI.setIterations(1);
+    taskBroadcastRSSI.setInterval(30000);
   }
 
   int maxRSSI = INT_MIN; // Initialize to the smallest possible integer
@@ -198,12 +198,12 @@ void sinkNodeElection() {
   Serial.println("Sink node election done!");
   Serial.println("Sink node is " + String(target));
 
-  File file = SD.open("/NodeID_RSSI4.txt");
+  File file = SD.open("/NodeID_RSSI5.txt");
 
   if(!file) {
     Serial.println("File doesn't exist");
     Serial.println("Creating file...");
-    writeFile(SD, "/NodeID_RSSI4.txt", nodeRSSIString.c_str());
+    writeFile(SD, "/NodeID_RSSI5.txt", nodeRSSIString.c_str());
   }
   else {
     Serial.println("File already exists");  
