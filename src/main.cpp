@@ -46,7 +46,7 @@ void setup() {
     Serial.println("Card Mount Failed");
   }
 
-  File file = SD.open("/NodeID_RSSI2.txt");
+  File file = SD.open("/NodeID_RSSI3.txt");
   if(!file) {
     WiFi.begin(STATION_SSID, STATION_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {}
@@ -177,7 +177,6 @@ void sinkNodeElection() {
   // Iterate through the map
   for (const auto& pair : nodeRSSIMap) {
     nodeRSSIString = nodeRSSIString + String(pair.first) + ":" + String(pair.second) + ",";
-    Serial.println(nodeRSSIString);
 
     // Check if the current RSSI is greater than the maximum RSSI found so far
     if (pair.second > maxRSSI) {
@@ -194,18 +193,16 @@ void sinkNodeElection() {
     }
   }
 
-  nodeRSSIString = "";
-
   sne_done = true;
   Serial.println("Sink node election done!");
   Serial.println("Sink node is " + String(target));
 
-  File file = SD.open("/NodeID_RSSI2.txt");
+  File file = SD.open("/NodeID_RSSI3.txt");
 
   if(!file) {
     Serial.println("File doesn't exist");
     Serial.println("Creating file...");
-    writeFile(SD, "/NodeID_RSSI2.txt", nodeRSSIString.c_str());
+    writeFile(SD, "/NodeID_RSSI3.txt", nodeRSSIString.c_str());
   }
   else {
     Serial.println("File already exists");  
