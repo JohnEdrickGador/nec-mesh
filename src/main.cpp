@@ -203,7 +203,6 @@ void loop() {
     
     if (!tasksEnabled) {
       taskSendTime.enable();
-      taskSendMessage.enable();
       taskPublishMQTT.enable();
       taskPublishMQTT1.enable();
       tasksEnabled = true;
