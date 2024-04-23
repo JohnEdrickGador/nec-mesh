@@ -362,7 +362,7 @@ void sinkNodeElection() {
 
   if(!sneDone) {
     taskBroadcastRSSI.enableIfNot();
-    taskBroadcastRSSI.setIterations(5);
+    taskBroadcastRSSI.setInterval(30000);
   }
 
   int maxRSSI = INT_MIN; // Initialize to the smallest possible integer
