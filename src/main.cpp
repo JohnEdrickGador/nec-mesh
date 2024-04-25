@@ -253,8 +253,7 @@ void setup() {
     while(mesh.getNodeList().size() + 1 != MESH_SIZE) {
       mesh.update();
     }
-
-  Serial.println("All nodes connected!");
+    Serial.println("All nodes connected!");
   }
   // Perform sink node election
   sinkNodeElection();
