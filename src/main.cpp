@@ -89,10 +89,12 @@ void setup() {
   userScheduler.addTask( taskBroadcastRSSI );
   userScheduler.addTask( taskSinkNodeElection );
 
-  while(mesh.getNodeList().size() + 1 != mesh_size) {
-    mesh.update();
+  if(!sne_done) {
+    while(mesh.getNodeList().size() + 1 != mesh_size) {
+      mesh.update();
+    }
+    Serial.println("All nodes connected!");
   }
-  Serial.println("All nodes connected!");
 
   sinkNodeElection();
 }
