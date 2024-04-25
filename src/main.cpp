@@ -248,13 +248,14 @@ void setup() {
   userScheduler.addTask(taskSinkNodeElection);
   userScheduler.addTask(taskBroadcastTime);
 
+  if(!sneDone) {
   // Wait for all nodes to be connected
-  while(mesh.getNodeList().size() + 1 != MESH_SIZE) {
-    mesh.update();
-  }
+    while(mesh.getNodeList().size() + 1 != MESH_SIZE) {
+      mesh.update();
+    }
 
   Serial.println("All nodes connected!");
-
+  }
   // Perform sink node election
   sinkNodeElection();
 
