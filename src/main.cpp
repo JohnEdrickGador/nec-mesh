@@ -876,6 +876,7 @@ void reconnect() {
       Serial.print(client.state());
     }
   }
+  delay(5000);
 }
 
 void publishMessage(const char* topic, String payload , boolean retained, String dataType){
