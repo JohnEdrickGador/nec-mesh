@@ -29,15 +29,15 @@ Adafruit_INA219 ina219;
 Adafruit_SGP30 sgp;
 
 /*** Mesh Details ***/
-#define   WIFI_CHANNEL    9 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   WIFI_CHANNEL    6 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX     "NEC_4TH_FLOOR"
 #define   MESH_PASSWORD   "CARE_OFFICE"
 #define   MESH_PORT       5555
-#define   MESH_SIZE       4
+#define   MESH_SIZE       3
 
 /*** Access Point Credentials ***/
-#define   STATION_SSID          "HG8145V5_7185A"
-#define   STATION_PASSWORD      "X7BBwEDt"
+#define   STATION_SSID          "CARE_407"
+#define   STATION_PASSWORD      "nec_c@re"
 
 /*** Host Names ***/
 #define   SINK_HOSTNAME         "Sink_Node"
@@ -405,7 +405,9 @@ void sinkNodeElection() {
 
   if(mesh.getNodeId() == target) {
     mesh.setHostname(SINK_HOSTNAME);
-    connectToWifi();
+    if(!connectToWifi) {
+      connectToWifi();
+    }
     taskBroadcastTime.enableIfNot();
     publishSensorData();
     publishOutdoorAnemometerData();
