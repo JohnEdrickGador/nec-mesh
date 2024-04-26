@@ -404,10 +404,8 @@ void sinkNodeElection() {
   file.close();
 
   if(mesh.getNodeId() == target) {
-    mesh.setHostname(SINK_HOSTNAME);
-    if(!connectToWifi) {
-      connectToWifi();
-    }
+    mesh.setHostname(SINK_HOSTNAME);      
+    connectToWifi();
     taskBroadcastTime.enableIfNot();
     publishSensorData();
     publishOutdoorAnemometerData();
@@ -934,7 +932,7 @@ void publishOutdoorAnemometerData() {
   sdOutdoorAnemometerLog("/OutdoorAnemometerLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = "1";
+  doc["Source"] = "5";
   doc["local_time"] = timeStamp;
   doc["TMP"] = String(NAN);
   doc["RH"] = String(NAN);
@@ -963,7 +961,7 @@ void publishIndoorAnemometerData() {
   sdIndoorAnemometerLog("/IndoorAnemometerLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = "1";
+  doc["Source"] = "3";
   doc["local_time"] = timeStamp;
   doc["TMP"] = String(NAN);
   doc["RH"] = String(NAN);
