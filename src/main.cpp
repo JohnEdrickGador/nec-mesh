@@ -248,6 +248,9 @@ void setup() {
   userScheduler.addTask(taskSinkNodeElection);
   userScheduler.addTask(taskBroadcastTime);
 
+  // Configure to synchronize with PH time
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
+
   if(!sneDone) {
   // Wait for all nodes to be connected
     while(mesh.getNodeList().size() + 1 != MESH_SIZE) {
@@ -257,9 +260,6 @@ void setup() {
   }
   // Perform sink node election
   sinkNodeElection();
-
-  // Configure to synchronize with PH time
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
 }
 
 void loop() {
