@@ -423,6 +423,7 @@ void sinkNodeElection() {
 
 void connectToWifi() {
   mesh.stationManual(STATION_SSID, STATION_PASSWORD);
+  while(WiFi.status() != WL_CONNECTED){mesh.update();}
   Serial.println("Connected to wifi!");
   isConnected = true;
 }
@@ -875,8 +876,8 @@ void reconnect() {
       Serial.print("failed, rc=");
       Serial.print(client.state());
     }
+    delay(5000);
   }
-  delay(5000);
 }
 
 void publishMessage(const char* topic, String payload , boolean retained, String dataType){
