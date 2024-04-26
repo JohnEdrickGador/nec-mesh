@@ -23,9 +23,11 @@ void broadcastRSSI();
 void connectToWifi();
 void writeFile(fs::FS &fs, const char * path, const char * message);
 void sendMessage();
+void meshReconnect();
 
 Task taskBroadcastRSSI (TASK_SECOND * 10, TASK_FOREVER, &broadcastRSSI);
 Task taskSinkNodeElection (TASK_SECOND * 60, TASK_FOREVER, &sinkNodeElection );
+Task taskMeshReconnect (TASK_SECOND * 30, TASK_FOREVER, &meshReconnect);
 
 painlessMesh  mesh;
 Scheduler userScheduler;
@@ -88,6 +90,7 @@ void setup() {
 
   userScheduler.addTask( taskBroadcastRSSI );
   userScheduler.addTask( taskSinkNodeElection );
+  userScheduler.addTask( taskMeshReconnect );
 
   if(!sne_done) {
     while(mesh.getNodeList().size() + 1 != mesh_size) {
@@ -106,7 +109,10 @@ void loop() {
   }
 
   if(mesh.getNodeList().size() == 0) {
-    mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
+    taskMeshReconnect.enableIfNot();
+  }
+  else {
+    taskMeshReconnect.disable();
   }
 }
 
@@ -229,4 +235,9 @@ void sinkNodeElection() {
     mesh.sendBroadcast("My sink node is " + String(target));
     digitalWrite(10, LOW);
   }
+}
+
+void meshReconnect() {
+  mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
+  Serial.println("Reconnected to the mesh!");
 }
