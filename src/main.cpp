@@ -9,7 +9,7 @@
 #define   MESH_PASSWORD   "password"
 #define   MESH_PORT       5555
 
-#define   STATION_SSID     "team1b"
+#define   STATION_SSID     "CARE_407"
 #define   STATION_PASSWORD "nec_c@re"
 
 #define   HOSTNAME         "MQTT_Bridge"
@@ -89,12 +89,12 @@ void setup() {
   userScheduler.addTask( taskBroadcastRSSI );
   userScheduler.addTask( taskSinkNodeElection );
 
-  if(!sne_done) {
+  // if(!sne_done) {
     while(mesh.getNodeList().size() + 1 != mesh_size) {
       mesh.update();
     }
     Serial.println("All nodes connected!");
-  }
+  // }
 
   sinkNodeElection();
 }
@@ -104,9 +104,9 @@ void loop() {
   if(!taskSinkNodeElection.isEnabled()){
     taskSinkNodeElection.enableDelayed(60000);
   }
-  if(mesh.getNodeList().size() == 0) {
-    mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
-  }
+  // if(mesh.getNodeList().size() == 0) {
+  //   mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
+  // }
 }
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
