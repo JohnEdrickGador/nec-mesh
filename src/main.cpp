@@ -404,7 +404,7 @@ void sinkNodeElection() {
   file.close();
 
   if(mesh.getNodeId() == target) {
-    mesh.setHostname(SINK_HOSTNAME);      
+    mesh.setHostname(SINK_HOSTNAME);
     connectToWifi();
     taskBroadcastTime.enableIfNot();
     publishSensorData();
@@ -423,7 +423,6 @@ void sinkNodeElection() {
 
 void connectToWifi() {
   mesh.stationManual(STATION_SSID, STATION_PASSWORD);
-  while(WiFi.status() != WL_CONNECTED) {}
   Serial.println("Connected to wifi!");
   isConnected = true;
 }
@@ -903,7 +902,7 @@ void publishSensorData() {
   sdSensorLog("/SensorLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = "1";
+  doc["Source"] = "4";
   doc["local_time"] = timeStamp;
   doc["TMP"] = String(ambientTemperature);
   doc["RH"] = String(ambientHumidity);
@@ -992,7 +991,7 @@ void sendMessage() {
   sdSensorLog("/SensorLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = "1";
+  doc["Source"] = "4";
   doc["local_time"] = timeStamp;
   doc["TMP"] = String(ambientTemperature);
   doc["RH"] = String(ambientHumidity);
