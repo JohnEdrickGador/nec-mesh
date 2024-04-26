@@ -23,11 +23,9 @@ void broadcastRSSI();
 void connectToWifi();
 void writeFile(fs::FS &fs, const char * path, const char * message);
 void sendMessage();
-void meshReconnect();
 
 Task taskBroadcastRSSI (TASK_SECOND * 10, TASK_FOREVER, &broadcastRSSI);
 Task taskSinkNodeElection (TASK_SECOND * 60, TASK_FOREVER, &sinkNodeElection );
-Task taskMeshReconnect (TASK_SECOND * 30, TASK_FOREVER, &meshReconnect);
 
 painlessMesh  mesh;
 Scheduler userScheduler;
@@ -48,7 +46,7 @@ void setup() {
     Serial.println("Card Mount Failed");
   }
 
-  File file = SD.open("/NodeID_RSSI2.txt");
+  File file = SD.open("/NodeID_RSSI1.txt");
   if(!file) {
     WiFi.begin(STATION_SSID, STATION_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {}
@@ -90,7 +88,6 @@ void setup() {
 
   userScheduler.addTask( taskBroadcastRSSI );
   userScheduler.addTask( taskSinkNodeElection );
-  userScheduler.addTask( taskMeshReconnect );
 
   if(!sne_done) {
     while(mesh.getNodeList().size() + 1 != mesh_size) {
@@ -106,13 +103,6 @@ void loop() {
   mesh.update();
   if(!taskSinkNodeElection.isEnabled()){
     taskSinkNodeElection.enableDelayed(60000);
-  }
-
-  if(mesh.getNodeList().size() == 0) {
-    taskMeshReconnect.enableIfNot();
-  }
-  else {
-    taskMeshReconnect.disable();
   }
 }
 
@@ -210,12 +200,12 @@ void sinkNodeElection() {
   Serial.println("Sink node election done!");
   Serial.println("Sink node is " + String(target));
 
-  File file = SD.open("/NodeID_RSSI2.txt");
+  File file = SD.open("/NodeID_RSSI1.txt");
 
   if(!file) {
     Serial.println("File doesn't exist");
     Serial.println("Creating file...");
-    writeFile(SD, "/NodeID_RSSI2.txt", nodeRSSIString.c_str());
+    writeFile(SD, "/NodeID_RSSI1.txt", nodeRSSIString.c_str());
   }
   else {
     Serial.println("File already exists");  
@@ -235,9 +225,4 @@ void sinkNodeElection() {
     mesh.sendBroadcast("My sink node is " + String(target));
     digitalWrite(10, LOW);
   }
-}
-
-void meshReconnect() {
-  mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
-  Serial.println("Reconnected to the mesh!");
 }
