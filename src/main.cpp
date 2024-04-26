@@ -48,7 +48,7 @@ void setup() {
     Serial.println("Card Mount Failed");
   }
 
-  File file = SD.open("/NodeID_RSSI1.txt");
+  File file = SD.open("/NodeID_RSSI2.txt");
   if(!file) {
     WiFi.begin(STATION_SSID, STATION_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {}
@@ -210,12 +210,12 @@ void sinkNodeElection() {
   Serial.println("Sink node election done!");
   Serial.println("Sink node is " + String(target));
 
-  File file = SD.open("/NodeID_RSSI1.txt");
+  File file = SD.open("/NodeID_RSSI2.txt");
 
   if(!file) {
     Serial.println("File doesn't exist");
     Serial.println("Creating file...");
-    writeFile(SD, "/NodeID_RSSI1.txt", nodeRSSIString.c_str());
+    writeFile(SD, "/NodeID_RSSI2.txt", nodeRSSIString.c_str());
   }
   else {
     Serial.println("File already exists");  
