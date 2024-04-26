@@ -104,6 +104,10 @@ void loop() {
   if(!taskSinkNodeElection.isEnabled()){
     taskSinkNodeElection.enableDelayed(60000);
   }
+  if(mesh.getNodeList().size() == 0) {
+    setup();
+    mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL );
+  }
 }
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
