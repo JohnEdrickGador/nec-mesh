@@ -9,7 +9,7 @@
 #define   MESH_PASSWORD   "password"
 #define   MESH_PORT       5555
 
-#define   STATION_SSID     "CARE_407"
+#define   STATION_SSID     "team1b"
 #define   STATION_PASSWORD "nec_c@re"
 
 #define   HOSTNAME         "MQTT_Bridge"
@@ -46,7 +46,7 @@ void setup() {
     Serial.println("Card Mount Failed");
   }
 
-  File file = SD.open("/NodeID_RSSI5.txt");
+  File file = SD.open("/NodeID_RSSI.txt");
   if(!file) {
     WiFi.begin(STATION_SSID, STATION_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {}
@@ -200,12 +200,12 @@ void sinkNodeElection() {
   Serial.println("Sink node election done!");
   Serial.println("Sink node is " + String(target));
 
-  File file = SD.open("/NodeID_RSSI5.txt");
+  File file = SD.open("/NodeID_RSSI.txt");
 
   if(!file) {
     Serial.println("File doesn't exist");
     Serial.println("Creating file...");
-    writeFile(SD, "/NodeID_RSSI5.txt", nodeRSSIString.c_str());
+    writeFile(SD, "/NodeID_RSSI.txt", nodeRSSIString.c_str());
   }
   else {
     Serial.println("File already exists");  
