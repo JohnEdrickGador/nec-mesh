@@ -44,9 +44,9 @@ Adafruit_SGP30 sgp;
 #define   CHILD_HOSTNAME        "Child_Node"
 
 /*** MQTT Broker Connection Details ***/
-const char* mqttServer = "7037541e66a1404980eb5c1c4f000874.s1.eu.hivemq.cloud";
-const char* mqttUsername = "ESP32-Test";
-const char* mqttPassword = "ESP32test01";
+const char* mqttServer = "198e7235f58349c4abe133a3e05ed706.s1.eu.hivemq.cloud";
+const char* mqttUsername = "MQTTExplorer";
+const char* mqttPassword = "Explorer01";
 const int   mqttPort = 8883;
 const char* publishTopic ="ESP32PubTest";
 const char* subscribeTopic = "ESP32SubTest"; 
@@ -405,19 +405,19 @@ void sinkNodeElection() {
 
   if(mesh.getNodeId() == target) {
     mesh.setHostname(SINK_HOSTNAME);
+    digitalWrite(10, HIGH);
     connectToWifi();
     taskBroadcastTime.enableIfNot();
     publishSensorData();
     publishOutdoorAnemometerData();
     publishIndoorAnemometerData();
-    digitalWrite(10, HIGH);
   }
 
   else {
     mesh.setHostname(CHILD_HOSTNAME);
+    digitalWrite(10, LOW);
     sendMessage();
     taskBroadcastTime.disable();
-    digitalWrite(10, LOW);
   }
 }
 
