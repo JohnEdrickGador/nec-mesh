@@ -45,8 +45,8 @@ Adafruit_SGP30 sgp;
 
 /*** MQTT Broker Connection Details ***/
 const char* mqttServer = "198e7235f58349c4abe133a3e05ed706.s1.eu.hivemq.cloud";
-const char* mqttUsername = "MQTTExplorer";
-const char* mqttPassword = "Explorer01";
+const char* mqttUsername = "ESP32-Test";
+const char* mqttPassword = "ESP32test01";
 const int   mqttPort = 8883;
 const char* publishTopic ="ESP32PubTest";
 const char* subscribeTopic = "ESP32SubTest"; 
