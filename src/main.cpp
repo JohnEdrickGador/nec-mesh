@@ -216,7 +216,7 @@ void sinkNodeElection() {
   nodeRSSIString = "";
 
   if(mesh.getNodeId() == target) {
-    connectToWifi();
+    if(!isConnected) {connectToWifi();}
     digitalWrite(10, HIGH);
   }
 
