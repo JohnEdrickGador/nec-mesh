@@ -152,3 +152,68 @@ void getAnemometerData(String url, float &windSpeed, float &windGust, float &win
 // Time
 void getTime();
 void broadcastTime();
+
+/***Variables***/
+
+//Mesh Network
+int myRSSI;
+String nodeIDRSSIString;
+std::map<uint32_t, int> nodeIDRSSIMap;
+uint32_t target;
+bool sneDone = false;
+bool isConnected = false; //flag to check if node is connected to the internet
+
+// SEN55
+float massConcentrationPm1p0;
+float massConcentrationPm2p5;
+float massConcentrationPm4p0;
+float massConcentrationPm10p0;
+float ambientHumidity;
+float ambientTemperature;
+float vocIndex;
+float noxIndex;
+
+// SGP30
+float CO2;
+float TVOC;
+
+// Air Quality Index
+int Cp, AQI;
+float BPhi, BPlo, Ihi, Ilo;
+float pm2p5Ip = 999999999, pm10Ip = 999999999, tvocIp = 999999999, co2Ip = 999999999;
+String aqiDescription;
+std::vector<std::vector<int>> aqiValues = {{0, 50}, {51, 100}, {101, 150}, {151, 200}, {201, 300}, {301, 500}};
+std::vector<String> aqiDescriptionVector = {"Green- Good", "Yellow- Moderate", "Orange- Unhealthy for Sensitive Groups", "Red- Unhealthy", "Purple- Very Unhealthy", "Maroon- Hazardous"};
+std::vector<std::vector<float>> pm2p5Breakpoints = {{0.0, 25.0}, {25.1, 35.0}, {35.1, 45.0}, {45.1, 55.0}, {55.1, 90.0}, {91.0, 999999999.0}};  // PM2.5- from DENR
+std::vector<std::vector<int>> pm10Breakpoints = {{0, 54}, {55, 154}, {155, 254}, {255, 354}, {355, 424}, {425, 604}};                          // PM10- from US-EPA
+std::vector<std::vector<int>> co2Breakpoints = {{0, 500}, {501, 1000}, {1001, 1500}, {1501, 2000}, {2001, 3000}, {3001, 5000}};                // CO2- from US-EPA (Researchgate)
+std::vector<std::vector<int>> tvocBreakpoints = {{0, 500}, {501, 1000}, {1001, 1500}, {1501, 2000}, {2001, 3000}, {3001, 5000}};                // TVOC- from US-EPA
+
+// INA219
+float shuntVoltage;
+float busVoltage;
+float currentmA;
+float loadVoltage;
+float powermW;
+
+// Anemometer
+float outdoorWindSpeed;
+float outdoorWindGust;
+float outdoorWindDirection;
+float indoorWindSpeed;
+float indoorWindGust;
+float indoorWindDirection;
+String outdoorURL = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
+String indoorURL = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
+
+// Time
+String timeStamp;
+const char* ntpServer1 = "pool.ntp.org";
+const char* ntpServer2 = "time.nist.gov";
+const long  gmtOffset_sec = 28800;
+const int   daylightOffset_sec = 0;
+
+// SD Card
+String sensorData;
+String outdoorAnemometerData;
+String indoorAnemometerData;
