@@ -36,7 +36,7 @@ Adafruit_SGP30 sgp;
 #define   MESH_SIZE       2
 
 /*** Access Point Credentials ***/
-#define   STATION_SSID          "Jarvis 5G"
+#define   STATION_SSID          "Jarvis"
 #define   STATION_PASSWORD      "0n3_Voy@ger!"
 
 /*** Host Names ***/
@@ -313,7 +313,7 @@ void receivedCallback(const uint32_t &from, const String &msg) {
     nodeIDRSSIMap.insert({from, msg.toInt()});
     Serial.println("RSSI and nodeID pushed to map!");
   }
-  else if(sneDone && msg.toInt() == 0) {
+  else if(sneDone) {
     if(mesh.getNodeId() == target) {
       publishMessage(publishTopic, msg, true, "Sensor");
     }
