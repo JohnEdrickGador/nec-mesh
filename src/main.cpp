@@ -313,7 +313,7 @@ void receivedCallback(const uint32_t &from, const String &msg) {
     nodeIDRSSIMap.insert({from, msg.toInt()});
     Serial.println("RSSI and nodeID pushed to map!");
   }
-  else if(sneDone) {
+  else if(sneDone && msg.toInt() == 0) {
     if(mesh.getNodeId() == target) {
       publishMessage(publishTopic, msg, true, "Sensor");
     }
