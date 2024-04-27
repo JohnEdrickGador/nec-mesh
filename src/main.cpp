@@ -38,3 +38,16 @@ Adafruit_SGP30 sgp;
 /*** Access Point Credentials ***/
 #define   STATION_SSID          "CARE_407"
 #define   STATION_PASSWORD      "nec_c@re"
+
+/*** Host Names ***/
+#define   SINK_HOSTNAME         "Sink_Node"
+#define   CHILD_HOSTNAME        "Child_Node"
+
+/*** MQTT Broker Connection Details ***/
+const char* mqttServer = "198e7235f58349c4abe133a3e05ed706.s1.eu.hivemq.cloud";
+const char* mqttUsername = "ESP32-Test";
+const char* mqttPassword = "ESP32test01";
+const int   mqttPort = 8883;
+const char* publishTopic ="ESP32PubTest";
+const char* subscribeTopic = "ESP32SubTest"; 
+
