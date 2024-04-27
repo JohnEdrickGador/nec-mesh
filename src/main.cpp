@@ -51,3 +51,17 @@ const int   mqttPort = 8883;
 const char* publishTopic ="ESP32PubTest";
 const char* subscribeTopic = "ESP32SubTest"; 
 
+/*** Buffer Space ***/
+// The used commands use up to 48 bytes. On some Arduino's the default buffer space is not large enough
+#define MAXBUF_REQUIREMENT 48
+
+#if (defined(I2C_BUFFER_LENGTH) &&                 \
+     (I2C_BUFFER_LENGTH >= MAXBUF_REQUIREMENT)) || \
+    (defined(BUFFER_LENGTH) && BUFFER_LENGTH >= MAXBUF_REQUIREMENT)
+#define USE_PRODUCT_INFO
+#endif
+
+/*** Buffer ***/
+unsigned long lastMsg = 0;
+#define MSG_BUFFER_SIZE (50)
+char msg[MSG_BUFFER_SIZE];
