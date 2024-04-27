@@ -29,15 +29,15 @@ Adafruit_INA219 ina219;
 Adafruit_SGP30 sgp;
 
 /*** Mesh Details ***/
-#define   WIFI_CHANNEL    6 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   WIFI_CHANNEL    116 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX     "NEC_4TH_FLOOR"
 #define   MESH_PASSWORD   "CARE_OFFICE"
 #define   MESH_PORT       5555
-#define   MESH_SIZE       3
+#define   MESH_SIZE       2
 
 /*** Access Point Credentials ***/
-#define   STATION_SSID          "CARE_407"
-#define   STATION_PASSWORD      "nec_c@re"
+#define   STATION_SSID          "Jarvis 5G"
+#define   STATION_PASSWORD      "0n3_Voy@ger!"
 
 /*** Host Names ***/
 #define   SINK_HOSTNAME         "Sink_Node"
