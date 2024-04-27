@@ -100,3 +100,55 @@ mRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d
 emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 )EOF";
+
+/***Functions***/
+
+//Mesh Network
+void receivedCallback(const uint32_t &from, const String &msg);
+void sendMessage();
+
+//Sink Node Election
+void sinkNodeElectionInit();
+void sinkNodeElection();
+void connectToWifi();
+void broadcastRSSI();
+
+//MQTT Protocol
+void reconnect();
+void publishMessage(const char* topic, String payload , boolean retained, String dataType);
+void publishSensorData();
+void publishOutdoorAnemometerData();
+void publishIndoorAnemometerData();
+
+//SD Card Operations
+void sdInit();
+void sdCreateFile(const char* fileName, String dataType);
+void appendFile(fs::FS &fs, const char * path, const char * message);
+void writeFile(fs::FS &fs, const char * path, const char * message);
+void sdOutdoorAnemometerLog(const char* fileName);
+void sdIndoorAnemometerLog(const char* fileName);
+void sdSensorLog(const char* fileName);
+
+// SEN55
+void printSerialNumber();
+void printModuleVersions();
+void sen55Init();
+void sen55Read();
+
+// SGP30
+void sgp30Init();
+void sgp30Read();
+
+// Air Quality Index
+void getAQI();
+
+// INA219
+void ina219Init();
+void ina219Read();
+
+// Anemometer
+void getAnemometerData(String url, float &windSpeed, float &windGust, float &windDirection);
+
+// Time
+void getTime();
+void broadcastTime();
