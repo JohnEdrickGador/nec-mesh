@@ -29,11 +29,14 @@ Adafruit_INA219 ina219;
 Adafruit_SGP30 sgp;
 
 /*** Mesh Details ***/
-#define   WIFI_CHANNEL    116 //Check the access point on your router for the channel - 6 is not the same for everyone
-#define   MESH_PREFIX     "NEC_4TH_FLOOR"
-#define   MESH_PASSWORD   "CARE_OFFICE"
-#define   MESH_PORT       5555
-#define   MESH_SIZE       2
+#define   WIFI_CHANNEL                116 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   MESH_PREFIX                 "NEC_4TH_FLOOR"
+#define   MESH_PASSWORD               "CARE_OFFICE"
+#define   MESH_PORT                   5555
+#define   MESH_SIZE                   2
+#define   NODE_SOURCE                 "1"
+#define   INDOOR_ANEMOMETER_SOURCE    "3"
+#define   OUTDOOR_ANEMOMETER_SOURCE   "5"
 
 /*** Access Point Credentials ***/
 #define   STATION_SSID          "Jarvis"
@@ -205,7 +208,7 @@ float indoorWindSpeed;
 float indoorWindGust;
 float indoorWindDirection;
 String outdoorURL = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
-String indoorURL = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
+String indoorURL = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO20&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
 
 // Time
 String timeStamp;
@@ -219,16 +222,18 @@ String sensorData;
 String outdoorAnemometerData;
 String indoorAnemometerData;
 
-//Misc
-String nodeNumber = "1";
-
 /*** Tasks ***/
 // All nodes
 Task taskBroadcastRSSI (TASK_SECOND * 10, TASK_FOREVER, &broadcastRSSI);
-Task taskSinkNodeElection (TASK_MINUTE * 2, TASK_FOREVER, &sinkNodeElection );
 
 // Sink Node
 Task taskBroadcastTime(TASK_SECOND * 30 , TASK_FOREVER, &broadcastTime);
+Task taskPublishSensorData(TASK_MINUTE * 2, TASK_FOREVER, &publishSensorData);
+Task taskPublishOutdoorAnemometerData(TASK_MINUTE * 2, TASK_FOREVER, &publishOutdoorAnemometerData);
+Task taskPublishIndoorAnemometerData(TASK_MINUTE * 2, TASK_FOREVER, &publishIndoorAnemometerData);
+
+// Child Node
+Task taskSendMessage(TASK_MINUTE * 2, TASK_FOREVER, &sendMessage);
 
 void setup() {
   Serial.begin(115200);
@@ -254,8 +259,11 @@ void setup() {
   client.setServer(mqttServer, mqttPort);
 
   userScheduler.addTask(taskBroadcastRSSI);
-  userScheduler.addTask(taskSinkNodeElection);
   userScheduler.addTask(taskBroadcastTime);
+  userScheduler.addTask(taskPublishSensorData);
+  userScheduler.addTask(taskPublishOutdoorAnemometerData);
+  userScheduler.addTask(taskPublishIndoorAnemometerData);
+  userScheduler.addTask(taskSendMessage);
 
   // Configure to synchronize with PH time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
@@ -274,9 +282,6 @@ void setup() {
 
 void loop() {
   mesh.update();
-  if(!taskSinkNodeElection.isEnabled()){
-    taskSinkNodeElection.enableDelayed(120000);
-  }
   if (isConnected == true) {
     if(mesh.getNodeId() == target) {
       if (!client.connected()) reconnect(); // check if client is connected
@@ -286,7 +291,7 @@ void loop() {
 }
 
 void broadcastRSSI() {
-  mesh.sendBroadcast(String(myRSSI));
+  mesh.sendBroadcast("RSSI: " + String(myRSSI));
   Serial.print("RSSI Broadcasted: ");
   Serial.println(myRSSI);
 }
@@ -309,17 +314,17 @@ void writeFile(fs::FS &fs, const char * path, const char * message) {
 
 void receivedCallback(const uint32_t &from, const String &msg) {
   Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
-  if(!sneDone && msg.toInt() != 0) {
-    nodeIDRSSIMap.insert({from, msg.toInt()});
+  if(msg.substring(0,4) == "RSSI") {
+    nodeIDRSSIMap.insert({from, msg.substring(6).toInt()});
     Serial.println("RSSI and nodeID pushed to map!");
   }
-  else if(sneDone && msg.toInt() == 0) {
+  else if(msg.substring(0,7) == "Payload") {
     if(mesh.getNodeId() == target) {
-      publishMessage(publishTopic, msg, true, "Sensor");
+      publishMessage(publishTopic, msg.substring(9), true, "Sensor");
     }
-    else {
-      timeStamp = msg;
-    }
+  }
+  else if (msg.substring(0,4) == "Time"){
+    timeStamp = msg.substring(6);
   }
 }
 
@@ -679,7 +684,7 @@ void getTime() {
 
 void broadcastTime() {
   getTime();
-  mesh.sendBroadcast(timeStamp);
+  mesh.sendBroadcast("Time: " + timeStamp);
 }
 
 void sdCreateFile(const char* fileName, String dataType) {
@@ -806,7 +811,7 @@ void publishSensorData() {
   sdSensorLog("/SensorLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = nodeNumber;
+  doc["Source"] = NODE_SOURCE;
   doc["local_time"] = timeStamp;
   doc["TMP"] = String(ambientTemperature);
   doc["RH"] = String(ambientHumidity);
@@ -835,7 +840,7 @@ void publishOutdoorAnemometerData() {
   sdOutdoorAnemometerLog("/OutdoorAnemometerLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = "5";
+  doc["Source"] = OUTDOOR_ANEMOMETER_SOURCE;
   doc["local_time"] = timeStamp;
   doc["TMP"] = String(NAN);
   doc["RH"] = String(NAN);
@@ -864,7 +869,7 @@ void publishIndoorAnemometerData() {
   sdIndoorAnemometerLog("/IndoorAnemometerLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = "3";
+  doc["Source"] = INDOOR_ANEMOMETER_SOURCE;
   doc["local_time"] = timeStamp;
   doc["TMP"] = String(NAN);
   doc["RH"] = String(NAN);
@@ -895,7 +900,7 @@ void sendMessage() {
   sdSensorLog("/SensorLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = nodeNumber;
+  doc["Source"] = NODE_SOURCE;
   doc["local_time"] = timeStamp;
   doc["TMP"] = String(ambientTemperature);
   doc["RH"] = String(ambientHumidity);
@@ -913,6 +918,7 @@ void sendMessage() {
 
   String mqttMessage;
   serializeJson(doc, mqttMessage);
+  mqttMessage = "Payload: " + mqttMessage;
   Serial.println(mqttMessage);
 
   if(mesh.sendSingle(target, mqttMessage)) {
@@ -971,10 +977,8 @@ void sinkNodeElection() {
     mesh.update();
   }
 
-  if(!sneDone) {
-    taskBroadcastRSSI.enableIfNot();
-    taskBroadcastRSSI.setInterval(30000);
-  }
+  taskBroadcastRSSI.enableIfNot();
+  taskBroadcastRSSI.setIterations(5);
 
   int maxRSSI = INT_MIN; // Initialize to the smallest possible integer
 
@@ -1018,18 +1022,17 @@ void sinkNodeElection() {
     mesh.setHostname(SINK_HOSTNAME);
     digitalWrite(10, HIGH);
     connectToWifi();
-    taskBroadcastTime.enableIfNot();
-    publishSensorData();
-    publishOutdoorAnemometerData();
-    publishIndoorAnemometerData();
+    taskBroadcastTime.enable();
+    taskPublishSensorData.enable();
+    taskPublishOutdoorAnemometerData.enable();
+    taskPublishIndoorAnemometerData.enable();
     mesh.setRoot(true);
   }
 
   else {
     mesh.setHostname(CHILD_HOSTNAME);
     digitalWrite(10, LOW);
-    sendMessage();
-    taskBroadcastTime.disable();
+    taskSendMessage.enable();
     mesh.setRoot(false);
   }
 
