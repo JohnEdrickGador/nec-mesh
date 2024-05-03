@@ -33,7 +33,7 @@ Adafruit_SGP30 sgp;
 #define   MESH_PREFIX                 "NEC_4TH_FLOOR"
 #define   MESH_PASSWORD               "CARE_OFFICE"
 #define   MESH_PORT                   5555
-#define   MESH_SIZE                   2
+#define   MESH_SIZE                   4
 #define   NODE_SOURCE                 "1"
 #define   INDOOR_ANEMOMETER_SOURCE    "3"
 #define   OUTDOOR_ANEMOMETER_SOURCE   "5"
@@ -47,11 +47,11 @@ Adafruit_SGP30 sgp;
 #define   CHILD_HOSTNAME        "Child_Node"
 
 /*** MQTT Broker Connection Details ***/
-const char* mqttServer = "ed7632329e6e4fbcbe77b1fa917585a1.s1.eu.hivemq.cloud";
-const char* mqttUsername = "gador.e";
-const char* mqttPassword = "CAREspice1b";
+const char* mqttServer = "198e7235f58349c4abe133a3e05ed706.s1.eu.hivemq.cloud";
+const char* mqttUsername = "ESP32-Test";
+const char* mqttPassword = "ESP32test01";
 const int   mqttPort = 8883;
-const char* publishTopic ="UPCARE/UNDERGRAD/EEE199_NEC";
+const char* publishTopic ="ESP32PubTest";
 const char* subscribeTopic = "ESP32SubTest"; 
 
 /*** Buffer Space ***/
