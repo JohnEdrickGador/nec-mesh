@@ -39,19 +39,19 @@ Adafruit_SGP30 sgp;
 #define   OUTDOOR_ANEMOMETER_SOURCE   "5"
 
 /*** Access Point Credentials ***/
-#define   STATION_SSID          "Jarvis"
-#define   STATION_PASSWORD      "0n3_Voy@ger!"
+#define   STATION_SSID          "CARE_407"
+#define   STATION_PASSWORD      "nec_c@re"
 
 /*** Host Names ***/
 #define   SINK_HOSTNAME         "Sink_Node"
 #define   CHILD_HOSTNAME        "Child_Node"
 
 /*** MQTT Broker Connection Details ***/
-const char* mqttServer = "198e7235f58349c4abe133a3e05ed706.s1.eu.hivemq.cloud";
-const char* mqttUsername = "ESP32-Test";
-const char* mqttPassword = "ESP32test01";
+const char* mqttServer = "ed7632329e6e4fbcbe77b1fa917585a1.s1.eu.hivemq.cloud";
+const char* mqttUsername = "gador.e";
+const char* mqttPassword = "CAREspice1b";
 const int   mqttPort = 8883;
-const char* publishTopic ="ESP32PubTest";
+const char* publishTopic ="UPCARE/UNDERGRAD/EEE199_NEC";
 const char* subscribeTopic = "ESP32SubTest"; 
 
 /*** Buffer Space ***/
@@ -989,14 +989,14 @@ void sinkNodeElection() {
     // Check if the current RSSI is greater than the maximum RSSI found so far
     if (pair.second > maxRSSI) {
       // Update the maximum RSSI and corresponding node ID
-      if(pair.first == mesh.getNodeId() || mesh.isConnected(pair.first)) {
+      if(pair.first == mesh.getNodeId()) {
         maxRSSI = pair.second;
         target = pair.first;
       }
     }
     else if (pair.second == maxRSSI) {
       if (pair.first < target) {
-        if(pair.first == mesh.getNodeId() || mesh.isConnected(pair.first)){target = pair.first;}
+        if(pair.first == mesh.getNodeId()){target = pair.first;}
       }
     }
   }
