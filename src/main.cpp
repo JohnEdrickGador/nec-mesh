@@ -29,7 +29,7 @@ Adafruit_INA219 ina219;
 Adafruit_SGP30 sgp;
 
 /*** Mesh Details ***/
-#define   WIFI_CHANNEL                116 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   WIFI_CHANNEL                6 //Check the access point on your router for the channel - 6 is not the same for everyone
 #define   MESH_PREFIX                 "NEC_4TH_FLOOR"
 #define   MESH_PASSWORD               "CARE_OFFICE"
 #define   MESH_PORT                   5555
@@ -989,14 +989,12 @@ void sinkNodeElection() {
     // Check if the current RSSI is greater than the maximum RSSI found so far
     if (pair.second > maxRSSI) {
       // Update the maximum RSSI and corresponding node ID
-      if(pair.first == mesh.getNodeId()) {
-        maxRSSI = pair.second;
-        target = pair.first;
-      }
+      maxRSSI = pair.second;
+      target = pair.first;
     }
     else if (pair.second == maxRSSI) {
       if (pair.first < target) {
-        if(pair.first == mesh.getNodeId()){target = pair.first;}
+        target = pair.first;
       }
     }
   }
