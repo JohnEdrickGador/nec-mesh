@@ -44,7 +44,6 @@ Adafruit_SGP30 sgp;
 
 /*** Host Names ***/
 #define   SINK_HOSTNAME         "Sink_Node"
-#define   CHILD_HOSTNAME        "Child_Node"
 
 /*** MQTT Broker Connection Details ***/
 const char* mqttServer = "198e7235f58349c4abe133a3e05ed706.s1.eu.hivemq.cloud";
@@ -104,7 +103,7 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 )EOF";
 
-/***Functions***/
+/*** Functions ***/
 
 //Mesh Network
 void receivedCallback(const uint32_t &from, const String &msg);
@@ -156,7 +155,7 @@ void getAnemometerData(String url, float &windSpeed, float &windGust, float &win
 void getTime();
 void broadcastTime();
 
-/***Variables***/
+/*** Variables ***/
 
 //Mesh Network
 int myRSSI;
@@ -164,8 +163,11 @@ String nodeIDRSSIString;
 std::map<uint32_t, int> nodeIDRSSIMap;
 uint32_t target;
 bool sneDone = false;
+bool isSinkNode = false;
 bool isConnected = false; //flag to check if node is connected to the internet
 bool mapReconstructed = false;
+bool mqttConnected = false;
+bool timeAvailable = false;
 
 // SEN55
 float massConcentrationPm1p0;
@@ -211,7 +213,7 @@ String outdoorURL = "https://api.weather.com/v2/pws/observations/current?station
 String indoorURL = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO20&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
 
 // Time
-String timeStamp;
+String timeStamp = "";
 const char* ntpServer1 = "pool.ntp.org";
 const char* ntpServer2 = "time.nist.gov";
 const long  gmtOffset_sec = 28800;
@@ -282,10 +284,27 @@ void setup() {
 
 void loop() {
   mesh.update();
-  if (isConnected == true) {
+  if(isConnected == true) {
     if(mesh.getNodeId() == target) {
       if (!client.connected()) reconnect(); // check if client is connected
       client.loop();
+    }
+  }
+
+  if(isSinkNode) {
+    if(timeAvailable) {
+      taskBroadcastTime.enableIfNot();
+    }
+    if(mqttConnected) {
+      taskPublishSensorData.enableIfNot();
+      taskPublishOutdoorAnemometerData.enableIfNot();
+      taskPublishIndoorAnemometerData.enableIfNot();
+    }
+  }
+
+  else {
+    if(timeStamp != "") {
+      taskSendMessage.enableIfNot();
     }
   }
 }
@@ -319,7 +338,7 @@ void receivedCallback(const uint32_t &from, const String &msg) {
     Serial.println("RSSI and nodeID pushed to map!");
   }
   else if(msg.substring(0,7) == "Payload") {
-    if(mesh.getNodeId() == target) {
+    if(isSinkNode) {
       publishMessage(publishTopic, msg.substring(9), true, "Sensor");
     }
   }
@@ -679,6 +698,7 @@ void getTime() {
   strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &timeinfo);
   
   timeStamp = buffer;
+  timeAvailable = true;
   Serial.println(timeStamp);
 }
 
@@ -779,6 +799,7 @@ void reconnect() {
     if (client.connect(clientId.c_str(), mqttUsername, mqttPassword)) {
       Serial.println("connected");
       client.subscribe("led_state");   // subscribe the topics here
+      mqttConnected = true;
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -811,7 +832,7 @@ void publishSensorData() {
   sdSensorLog("/SensorLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = NODE_SOURCE;
+  doc["source"] = NODE_SOURCE;
   doc["local_time"] = timeStamp;
   doc["TMP"] = String(ambientTemperature);
   doc["RH"] = String(ambientHumidity);
@@ -821,9 +842,6 @@ void publishSensorData() {
   doc["TVOC"] = String(TVOC);
   doc["VOL"] = String(busVoltage);
   doc["POW"] = String(powermW);
-  doc["WSPD"] = String(NAN);
-  doc["WGUST"] = String(NAN);
-  doc["WDIR"] = String(NAN);
   doc["AQI"] = String(AQI);
   doc["type"] = "data";
 
@@ -840,20 +858,11 @@ void publishOutdoorAnemometerData() {
   sdOutdoorAnemometerLog("/OutdoorAnemometerLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = OUTDOOR_ANEMOMETER_SOURCE;
+  doc["source"] = OUTDOOR_ANEMOMETER_SOURCE;
   doc["local_time"] = timeStamp;
-  doc["TMP"] = String(NAN);
-  doc["RH"] = String(NAN);
-  doc["PM2p5"] = String(NAN);
-  doc["PM10"] = String(NAN);
-  doc["CO2"] = String(NAN);
-  doc["TVOC"] = String(NAN);
-  doc["VOL"] = String(NAN);
-  doc["POW"] = String(NAN);
   doc["WSPD"] = String(outdoorWindSpeed);
   doc["WGUST"] = String(outdoorWindGust);
   doc["WDIR"] = String(outdoorWindDirection);
-  doc["AQI"] = String(NAN);
   doc["type"] = "data";
 
   String mqttMessage;
@@ -869,20 +878,11 @@ void publishIndoorAnemometerData() {
   sdIndoorAnemometerLog("/IndoorAnemometerLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = INDOOR_ANEMOMETER_SOURCE;
+  doc["source"] = INDOOR_ANEMOMETER_SOURCE;
   doc["local_time"] = timeStamp;
-  doc["TMP"] = String(NAN);
-  doc["RH"] = String(NAN);
-  doc["PM2p5"] = String(NAN);
-  doc["PM10"] = String(NAN);
-  doc["CO2"] = String(NAN);
-  doc["TVOC"] = String(NAN);
-  doc["VOL"] = String(NAN);
-  doc["POW"] = String(NAN);
   doc["WSPD"] = String(indoorWindSpeed);
   doc["WGUST"] = String(indoorWindGust);
   doc["WDIR"] = String(indoorWindDirection);
-  doc["AQI"] = String(NAN);
   doc["type"] = "data";
 
   String mqttMessage;
@@ -900,7 +900,7 @@ void sendMessage() {
   sdSensorLog("/SensorLog.txt");
 
   JsonDocument doc;
-  doc["Source"] = NODE_SOURCE;
+  doc["source"] = NODE_SOURCE;
   doc["local_time"] = timeStamp;
   doc["TMP"] = String(ambientTemperature);
   doc["RH"] = String(ambientHumidity);
@@ -910,9 +910,6 @@ void sendMessage() {
   doc["TVOC"] = String(TVOC);
   doc["VOL"] = String(busVoltage);
   doc["POW"] = String(powermW);
-  doc["WSPD"] = String(NAN);
-  doc["WGUST"] = String(NAN);
-  doc["WDIR"] = String(NAN);
   doc["AQI"] = String(AQI);
   doc["type"] = "data";
 
@@ -977,8 +974,10 @@ void sinkNodeElection() {
     mesh.update();
   }
 
-  taskBroadcastRSSI.enableIfNot();
-  taskBroadcastRSSI.setIterations(5);
+  if(!mapReconstructed) {
+    taskBroadcastRSSI.enableIfNot();
+    taskBroadcastRSSI.setIterations(5);
+  }
 
   int maxRSSI = INT_MIN; // Initialize to the smallest possible integer
 
@@ -1017,20 +1016,15 @@ void sinkNodeElection() {
   file.close();
 
   if(mesh.getNodeId() == target) {
-    mesh.setHostname(SINK_HOSTNAME);
     digitalWrite(10, HIGH);
+    isSinkNode = true;
+    mesh.setHostname(SINK_HOSTNAME);
     connectToWifi();
-    taskBroadcastTime.enable();
-    taskPublishSensorData.enable();
-    taskPublishOutdoorAnemometerData.enable();
-    taskPublishIndoorAnemometerData.enable();
     mesh.setRoot(true);
   }
 
   else {
-    mesh.setHostname(CHILD_HOSTNAME);
     digitalWrite(10, LOW);
-    taskSendMessage.enable();
     mesh.setRoot(false);
   }
 
