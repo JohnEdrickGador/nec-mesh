@@ -34,7 +34,7 @@ Adafruit_SGP30 sgp;
 #define   MESH_PASSWORD               "CARE_OFFICE"
 #define   MESH_PORT                   5555
 #define   MESH_SIZE                   4
-#define   NODE_SOURCE                 "2"
+#define   NODE_SOURCE                 "6"
 #define   INDOOR_ANEMOMETER_SOURCE    "3"
 #define   OUTDOOR_ANEMOMETER_SOURCE   "5"
 
@@ -292,13 +292,13 @@ void loop() {
   }
 
   if(isSinkNode) {
+    if(mqttConnected) {
+      taskPublishSensorData.enableIfNot();
+      taskPublishOutdoorAnemometerData.enableIfNot();
+      taskPublishIndoorAnemometerData.enableIfNot();
+    }
     if(timeAvailable) {
       taskBroadcastTime.enableIfNot();
-      if(mqttConnected) {
-        taskPublishSensorData.enableIfNot();
-        taskPublishOutdoorAnemometerData.enableIfNot();
-        taskPublishIndoorAnemometerData.enableIfNot();
-      }
     }
   }
 
