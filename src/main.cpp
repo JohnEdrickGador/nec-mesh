@@ -46,12 +46,12 @@ Adafruit_SGP30 sgp;
 #define   SINK_HOSTNAME         "Sink_Node"
 
 /*** MQTT Broker Connection Details ***/
-const char* mqttServer = "198e7235f58349c4abe133a3e05ed706.s1.eu.hivemq.cloud";
-const char* mqttUsername = "ESP32-Test";
-const char* mqttPassword = "ESP32test01";
+const char* mqttServer = "ed7632329e6e4fbcbe77b1fa917585a1.s1.eu.hivemq.cloud";
+const char* mqttUsername = "gador.e";
+const char* mqttPassword = "CAREspice1b";
 const int   mqttPort = 8883;
-const char* publishTopic ="ESP32PubTest";
-const char* subscribeTopic = "ESP32SubTest"; 
+const char* publishTopic ="UPCARE/UNDERGRAD/EEE199_NEC";
+const char* subscribeTopic = "UPCARE/UNDERGRAD/EEE199_NEC"; 
 
 /*** Buffer Space ***/
 // The used commands use up to 48 bytes. On some Arduino's the default buffer space is not large enough
