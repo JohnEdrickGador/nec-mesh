@@ -34,9 +34,9 @@ Adafruit_SGP30 sgp;
 #define   MESH_PASSWORD               "CARE_OFFICE"
 #define   MESH_PORT                   5555
 #define   MESH_SIZE                   4
-#define   NODE_SOURCE                 "6"
-#define   INDOOR_ANEMOMETER_SOURCE    "3"
-#define   OUTDOOR_ANEMOMETER_SOURCE   "5"
+#define   NODE_SOURCE                 "18"
+#define   INDOOR_ANEMOMETER_SOURCE    "19"
+#define   OUTDOOR_ANEMOMETER_SOURCE   "20"
 
 /*** Access Point Credentials ***/
 #define   STATION_SSID          "CARE_407"
@@ -167,7 +167,6 @@ bool isSinkNode = false;
 bool isConnected = false; //flag to check if node is connected to the internet
 bool mapReconstructed = false;
 bool mqttConnected = false;
-bool timeAvailable = false;
 
 // SEN55
 float massConcentrationPm1p0;
@@ -293,12 +292,10 @@ void loop() {
 
   if(isSinkNode) {
     if(mqttConnected) {
+      taskBroadcastTime.enableIfNot();
       taskPublishSensorData.enableIfNot();
       taskPublishOutdoorAnemometerData.enableIfNot();
       taskPublishIndoorAnemometerData.enableIfNot();
-    }
-    if(timeAvailable) {
-      taskBroadcastTime.enableIfNot();
     }
   }
 
@@ -689,16 +686,15 @@ void getAnemometerData(String url, float &windSpeed, float &windGust, float &win
 
 void getTime() {
   struct tm timeinfo;
-  if(!getLocalTime(&timeinfo)){
+  while(!getLocalTime(&timeinfo)){
     Serial.println("No time available (yet)");
-    return;
+    delay(2000);
   }
 
   char buffer[50]; // Adjust the buffer size as needed
   strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &timeinfo);
   
   timeStamp = buffer;
-  timeAvailable = true;
   Serial.println(timeStamp);
 }
 
