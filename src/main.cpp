@@ -33,8 +33,8 @@ Adafruit_SGP30 sgp;
 #define   MESH_PREFIX                 "NEC_4TH_FLOOR"
 #define   MESH_PASSWORD               "CARE_OFFICE"
 #define   MESH_PORT                   5555
-#define   MESH_SIZE                   4
-#define   NODE_SOURCE                 "1"
+#define   MESH_SIZE                   2
+#define   NODE_SOURCE                 "2"
 #define   INDOOR_ANEMOMETER_SOURCE    "3"
 #define   OUTDOOR_ANEMOMETER_SOURCE   "5"
 
