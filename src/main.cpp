@@ -34,7 +34,7 @@ Adafruit_SGP30 sgp;
 #define   MESH_PASSWORD               "CARE_OFFICE"
 #define   MESH_PORT                   5555
 #define   MESH_SIZE                   4
-#define   NODE_SOURCE                 "18"
+#define   NODE_SOURCE                 "17"
 #define   INDOOR_ANEMOMETER_SOURCE    "19"
 #define   OUTDOOR_ANEMOMETER_SOURCE   "20"
 
