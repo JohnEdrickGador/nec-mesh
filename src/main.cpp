@@ -187,12 +187,12 @@ int Cp, AQI;
 float BPhi, BPlo, Ihi, Ilo;
 float pm2p5Ip = 999999999, pm10Ip = 999999999, tvocIp = 999999999, co2Ip = 999999999;
 String aqiDescription;
-std::vector<std::vector<int>> aqiValues = {{0, 50}, {51, 100}, {101, 150}, {151, 200}, {201, 300}, {301, 500}};
-std::vector<String> aqiDescriptionVector = {"Green- Good", "Yellow- Moderate", "Orange- Unhealthy for Sensitive Groups", "Red- Unhealthy", "Purple- Very Unhealthy", "Maroon- Hazardous"};
-std::vector<std::vector<float>> pm2p5Breakpoints = {{0.0, 25.0}, {25.1, 35.0}, {35.1, 45.0}, {45.1, 55.0}, {55.1, 90.0}, {91.0, 999999999.0}};  // PM2.5- from DENR
-std::vector<std::vector<int>> pm10Breakpoints = {{0, 54}, {55, 154}, {155, 254}, {255, 354}, {355, 424}, {425, 604}};                          // PM10- from US-EPA
-std::vector<std::vector<int>> co2Breakpoints = {{0, 500}, {501, 1000}, {1001, 1500}, {1501, 2000}, {2001, 3000}, {3001, 5000}};                // CO2- from US-EPA (Researchgate)
-std::vector<std::vector<int>> tvocBreakpoints = {{0, 500}, {501, 1000}, {1001, 1500}, {1501, 2000}, {2001, 3000}, {3001, 5000}};                // TVOC- from US-EPA
+std::vector<std::vector<int>> aqiValues = {{0, 50}, {51, 75}, {76, 100}, {101, 150}};
+std::vector<String> aqiDescriptionVector = {"Green- Good", "Yellow- Moderate", "Orange- Unhealthy for Sensitive Groups", "Red- Unhealthy"};
+std::vector<std::vector<int>> pm2p5Breakpoints = {{0, 15}, {16, 20}, {21, 30}, {30, 999999999}};          // PM2.5- from DENR
+std::vector<std::vector<int>> pm10Breakpoints = {{0, 50}, {51, 75}, {76, 100}, {100, 999999999}};         // PM10- from US-EPA
+std::vector<std::vector<int>> co2Breakpoints = {{0, 800}, {801, 1150}, {1151, 1500}, {1501, 999999999}};  // CO2- from US-EPA (Researchgate)
+std::vector<std::vector<int>> tvocBreakpoints = {{0, 400}, {401, 600}, {601, 800}, {800, 999999999}};     // TVOC- from BiyaHero
 
 // INA219
 float shuntVoltage;
@@ -553,8 +553,8 @@ void sgp30Read() {
 }
 
 void getAQI() {
-  for (int i=0; i<6; ++i) {
-    float pm2p5Rounded = std::round(massConcentrationPm2p5 * 10.0f)/ 10.0f;
+  for (int i=0; i<4; ++i) {
+    int pm2p5Rounded = std::round(massConcentrationPm2p5);
     if ((pm2p5Rounded <= pm2p5Breakpoints[i][1]) && (pm2p5Rounded >= pm2p5Breakpoints[i][0])) { 
       Cp = std::trunc(massConcentrationPm2p5);
       BPhi = pm2p5Breakpoints[i][1];
@@ -598,7 +598,7 @@ void getAQI() {
   if (pm2p5Ip != 999999999 && pm10Ip != 999999999 && co2Ip != 999999999 && tvocIp != 999999999) {
     // Max
     AQI = std::round(std::max({pm2p5Ip, pm10Ip, co2Ip, tvocIp}));
-    for (int i=0; i<6; ++i) {
+    for (int i=0; i<4; ++i) {
       if ((AQI <= aqiValues[i][1]) && (AQI >= aqiValues[i][0])) {
         aqiDescription = aqiDescriptionVector[i];
         break;
