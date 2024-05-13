@@ -30,13 +30,13 @@ Adafruit_SGP30 sgp;
 
 /*** Mesh Details ***/
 #define   WIFI_CHANNEL                6 //Check the access point on your router for the channel - 6 is not the same for everyone
-#define   MESH_PREFIX                 "NEC_4TH_FLOOR"
-#define   MESH_PASSWORD               "CARE_OFFICE"
+#define   MESH_PREFIX                 "TEST1"
+#define   MESH_PASSWORD               "TEST1"
 #define   MESH_PORT                   5555
-#define   MESH_SIZE                   4
-#define   NODE_SOURCE                 "21"
-#define   INDOOR_ANEMOMETER_SOURCE    "19"
-#define   OUTDOOR_ANEMOMETER_SOURCE   "20"
+#define   MESH_SIZE                   2
+#define   NODE_SOURCE                 "12"
+#define   INDOOR_ANEMOMETER_SOURCE    "3"
+#define   OUTDOOR_ANEMOMETER_SOURCE   "5"
 
 /*** Access Point Credentials ***/
 #define   STATION_SSID          "CARE_407"
@@ -46,12 +46,12 @@ Adafruit_SGP30 sgp;
 #define   SINK_HOSTNAME         "Sink_Node"
 
 /*** MQTT Broker Connection Details ***/
-const char* mqttServer = "ed7632329e6e4fbcbe77b1fa917585a1.s1.eu.hivemq.cloud";
-const char* mqttUsername = "gador.e";
-const char* mqttPassword = "CAREspice1b";
+const char* mqttServer = "7037541e66a1404980eb5c1c4f000874.s1.eu.hivemq.cloud";
+const char* mqttUsername = "ESP32-Test";
+const char* mqttPassword = "ESP32test01";
 const int   mqttPort = 8883;
-const char* publishTopic ="UPCARE/UNDERGRAD/EEE199_NEC";
-const char* subscribeTopic = "UPCARE/UNDERGRAD/EEE199_NEC"; 
+const char* publishTopic ="TestPayload";
+const char* subscribeTopic = "TestPayload"; 
 
 /*** Buffer Space ***/
 // The used commands use up to 48 bytes. On some Arduino's the default buffer space is not large enough
@@ -830,14 +830,14 @@ void publishSensorData() {
   JsonDocument doc;
   doc["source"] = NODE_SOURCE;
   doc["local_time"] = timeStamp;
-  doc["TMP"] = String(ambientTemperature);
-  doc["RH"] = String(ambientHumidity);
-  doc["PM2p5"] = String(massConcentrationPm2p5);
-  doc["PM10"] = String(massConcentrationPm10p0);
-  doc["CO2"] = String(CO2);
-  doc["TVOC"] = String(TVOC);
-  doc["VOL"] = String(busVoltage);
-  doc["POW"] = String(powermW);
+  doc["SEN55TMP_CELCIUS"] = String(ambientTemperature);
+  doc["SEN55RH_PERCENT"] = String(ambientHumidity);
+  doc["SEN55PM2p5_PPM"] = String(massConcentrationPm2p5);
+  doc["SEN55PM10_PPM"] = String(massConcentrationPm10p0);
+  doc["SGP30CO2_PPM"] = String(CO2);
+  doc["SGP30TVOC_PPB"] = String(TVOC);
+  doc["INA219VOL_V"] = String(busVoltage);
+  doc["INA219POW_mW"] = String(powermW);
   doc["AQI"] = String(AQI);
   doc["type"] = "data";
 
@@ -856,9 +856,9 @@ void publishOutdoorAnemometerData() {
   JsonDocument doc;
   doc["source"] = OUTDOOR_ANEMOMETER_SOURCE;
   doc["local_time"] = timeStamp;
-  doc["WSPD"] = String(outdoorWindSpeed);
-  doc["WGUST"] = String(outdoorWindGust);
-  doc["WDIR"] = String(outdoorWindDirection);
+  doc["WSPD_MPS"] = String(outdoorWindSpeed);
+  doc["WGUST_MPS"] = String(outdoorWindGust);
+  doc["WDIR_DEG"] = String(outdoorWindDirection);
   doc["type"] = "data";
 
   String mqttMessage;
@@ -876,9 +876,9 @@ void publishIndoorAnemometerData() {
   JsonDocument doc;
   doc["source"] = INDOOR_ANEMOMETER_SOURCE;
   doc["local_time"] = timeStamp;
-  doc["WSPD"] = String(indoorWindSpeed);
-  doc["WGUST"] = String(indoorWindGust);
-  doc["WDIR"] = String(indoorWindDirection);
+  doc["WSPD_MPS"] = String(indoorWindSpeed);
+  doc["WGUST_MPS"] = String(indoorWindGust);
+  doc["WDIR_DEG"] = String(indoorWindDirection);
   doc["type"] = "data";
 
   String mqttMessage;
@@ -898,14 +898,14 @@ void sendMessage() {
   JsonDocument doc;
   doc["source"] = NODE_SOURCE;
   doc["local_time"] = timeStamp;
-  doc["TMP"] = String(ambientTemperature);
-  doc["RH"] = String(ambientHumidity);
-  doc["PM2p5"] = String(massConcentrationPm2p5);
-  doc["PM10"] = String(massConcentrationPm10p0);
-  doc["CO2"] = String(CO2);
-  doc["TVOC"] = String(TVOC);
-  doc["VOL"] = String(busVoltage);
-  doc["POW"] = String(powermW);
+  doc["SEN55TMP_CELCIUS"] = String(ambientTemperature);
+  doc["SEN55RH_PERCENT"] = String(ambientHumidity);
+  doc["SEN55PM2p5_PPM"] = String(massConcentrationPm2p5);
+  doc["SEN55PM10_PPM"] = String(massConcentrationPm10p0);
+  doc["SGP30CO2_PPM"] = String(CO2);
+  doc["SGP30TVOC_PPB"] = String(TVOC);
+  doc["INA219VOL_V"] = String(busVoltage);
+  doc["INA219POW_mW"] = String(powermW);
   doc["AQI"] = String(AQI);
   doc["type"] = "data";
 
