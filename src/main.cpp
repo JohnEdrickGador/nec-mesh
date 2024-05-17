@@ -30,17 +30,17 @@ Adafruit_SGP30 sgp;
 
 /*** Mesh Details ***/
 #define   WIFI_CHANNEL                6 //Check the access point on your router for the channel - 6 is not the same for everyone
-#define   MESH_PREFIX                 "NEC_4TH_FLOOR"
-#define   MESH_PASSWORD               "CARE_OFFICE"
+#define   MESH_PREFIX                 "NEC_TEST"
+#define   MESH_PASSWORD               "PASSWORD"
 #define   MESH_PORT                   5555
-#define   MESH_SIZE                   4
-#define   NODE_SOURCE                 "21"
+#define   MESH_SIZE                   2
+#define   NODE_SOURCE                 "1"
 #define   INDOOR_ANEMOMETER_SOURCE    "19"
 #define   OUTDOOR_ANEMOMETER_SOURCE   "20"
 
 /*** Access Point Credentials ***/
-#define   STATION_SSID          "CARE_407"
-#define   STATION_PASSWORD      "nec_c@re"
+#define   STATION_SSID          "CARE1B_F4"
+#define   STATION_PASSWORD      "Nec_c@re"
 
 /*** Host Names ***/
 #define   SINK_HOSTNAME         "Sink_Node"
@@ -162,7 +162,6 @@ int myRSSI;
 String nodeIDRSSIString;
 std::map<uint32_t, int> nodeIDRSSIMap;
 uint32_t target;
-bool sneDone = false;
 bool isSinkNode = false;
 bool isConnected = false; //flag to check if node is connected to the internet
 bool mapReconstructed = false;
@@ -283,8 +282,8 @@ void setup() {
 
 void loop() {
   mesh.update();
-  if(isConnected == true) {
-    if(mesh.getNodeId() == target) {
+  if(isConnected) {
+    if(isSinkNode) {
       if (!client.connected()) reconnect(); // check if client is connected
       client.loop();
     }
@@ -296,12 +295,14 @@ void loop() {
       taskPublishSensorData.enableIfNot();
       taskPublishOutdoorAnemometerData.enableIfNot();
       taskPublishIndoorAnemometerData.enableIfNot();
+      taskBroadcastRSSI.disable();
     }
   }
 
   else {
     if(timeStamp != "") {
       taskSendMessage.enableIfNot();
+      taskBroadcastRSSI.disable();
     }
   }
 }
@@ -731,10 +732,13 @@ void sdCreateFile(const char* fileName, String dataType) {
 
 void sdInit() {
   sdCreateFile("/SensorLog.txt", "Sensor");
+  sdCreateFile("/SensorLogPublished.txt", "Sensor");
   sdCreateFile("/SensorLogFailedSend.txt", "Sensor");
   sdCreateFile("/SensorLogFailedPublish.txt", "Sensor");
   sdCreateFile("/OutdoorAnemometerLog.txt", "Anemometer");
   sdCreateFile("/IndoorAnemometerLog.txt", "Anemometer");
+  sdCreateFile("/OutdoorAnemometerLogPublished.txt", "Anemometer");
+  sdCreateFile("/IndoorAnemometerLogPublished.txt", "Anemometer");
   sdCreateFile("/OutdoorAnemometerLogFailedPublish.txt", "Anemometer");
   sdCreateFile("/IndoorAnemometerLogFailedPublish.txt", "Anemometer");
 }
@@ -807,6 +811,13 @@ void reconnect() {
 void publishMessage(const char* topic, String payload , boolean retained, String dataType){
   if (client.publish(topic, payload.c_str(), true)) {
     Serial.println("Message published ["+String(topic)+"]: "+payload);
+    if(dataType == "Sensor") {
+      sdSensorLog("/SensorLogPublished.txt");
+    } else if(dataType == "Outdoor Anemometer") {
+      sdOutdoorAnemometerLog("/OutdoorAnemometerLogPublished.txt");
+    } else {
+      sdIndoorAnemometerLog("/IndoorAnemometerLogPublished.txt");
+    }
   } else {
     Serial.println("Message not published");
     if(dataType == "Sensor") {
@@ -938,7 +949,6 @@ void sinkNodeElectionInit() {
     Serial.println(myRSSI);
   }
   else {
-    mapReconstructed = true;
     String numberString = "";
     int nodeID = 0;
     int RSSI = 0;
@@ -958,21 +968,17 @@ void sinkNodeElectionInit() {
         numberString = numberString + c;
       }
     }
+    mapReconstructed = true;
   }
   file.close();
 }
 
 void sinkNodeElection() {
   nodeIDRSSIMap.insert({mesh.getNodeId(), myRSSI});
+  taskBroadcastRSSI.enable();
   
   while (nodeIDRSSIMap.size() != MESH_SIZE) {
-    taskBroadcastRSSI.enableIfNot();
     mesh.update();
-  }
-
-  if(!mapReconstructed) {
-    taskBroadcastRSSI.enableIfNot();
-    taskBroadcastRSSI.setIterations(5);
   }
 
   int maxRSSI = INT_MIN; // Initialize to the smallest possible integer
@@ -994,7 +1000,6 @@ void sinkNodeElection() {
     }
   }
 
-  sneDone = true;
   Serial.println("Sink node election done!");
   Serial.println("Sink node is " + String(target));
 
