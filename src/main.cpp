@@ -297,6 +297,10 @@ void loop() {
       taskPublishIndoorAnemometerData.enableIfNot();
       taskBroadcastRSSI.disable();
     }
+    else {
+      if (!client.connected()) reconnect(); // check if client is connected
+      client.loop();
+    }
   }
 
   else {
@@ -771,7 +775,7 @@ void sdSensorLog(const char* fileName) {
 
 void sdOutdoorAnemometerLog(const char* fileName) {
   //Concatenate all info separated by commas
-  outdoorAnemometerData = String(NODE_SOURCE) + ", " + timeStamp + ", " + String(outdoorWindSpeed) + ", " + String(outdoorWindGust) + ", " + String(outdoorWindDirection) + "\r\n";
+  outdoorAnemometerData = String(OUTDOOR_ANEMOMETER_SOURCE) + ", " + timeStamp + ", " + String(outdoorWindSpeed) + ", " + String(outdoorWindGust) + ", " + String(outdoorWindDirection) + "\r\n";
   Serial.print("Saving data: ");
   Serial.println(outdoorAnemometerData);
 
@@ -781,7 +785,7 @@ void sdOutdoorAnemometerLog(const char* fileName) {
 
 void sdIndoorAnemometerLog(const char* fileName) {
   //Concatenate all info separated by commas
-  indoorAnemometerData = String(NODE_SOURCE) + ", " + timeStamp + ", " + String(indoorWindSpeed) + ", " + String(indoorWindGust) + ", " + String(indoorWindDirection) + "\r\n";
+  indoorAnemometerData = String(INDOOR_ANEMOMETER_SOURCE) + ", " + timeStamp + ", " + String(indoorWindSpeed) + ", " + String(indoorWindGust) + ", " + String(indoorWindDirection) + "\r\n";
   Serial.print("Saving data: ");
   Serial.println(indoorAnemometerData);
 
@@ -803,6 +807,7 @@ void reconnect() {
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
+      mqttConnected = false;
     }
     delay(5000);
   }
