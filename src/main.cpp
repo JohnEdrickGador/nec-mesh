@@ -30,16 +30,16 @@ Adafruit_SGP30 sgp;
 
 /*** Mesh Details ***/
 #define   WIFI_CHANNEL                6 //Check the access point on your router for the channel - 6 is not the same for everyone
-#define   MESH_PREFIX                 "NEC_TEST"
-#define   MESH_PASSWORD               "PASSWORD"
+#define   MESH_PREFIX                 "NEC_1ST_FLOOR"
+#define   MESH_PASSWORD               "AUDIO_VISUAL_ROOM"
 #define   MESH_PORT                   5555
-#define   MESH_SIZE                   2
-#define   NODE_SOURCE                 "1"
-#define   INDOOR_ANEMOMETER_SOURCE    "19"
-#define   OUTDOOR_ANEMOMETER_SOURCE   "20"
+#define   MESH_SIZE                   3
+#define   NODE_SOURCE                 "2"
+#define   INDOOR_ANEMOMETER_SOURCE    "3"
+#define   OUTDOOR_ANEMOMETER_SOURCE   "5"
 
 /*** Access Point Credentials ***/
-#define   STATION_SSID          "CARE1B_F4"
+#define   STATION_SSID          "CARE1B_F1"
 #define   STATION_PASSWORD      "Nec_c@re"
 
 /*** Host Names ***/
@@ -207,8 +207,8 @@ float outdoorWindDirection;
 float indoorWindSpeed;
 float indoorWindGust;
 float indoorWindDirection;
-String outdoorURL = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO15&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
-String indoorURL = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO20&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
+String outdoorURL = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO25&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
+String indoorURL = "https://api.weather.com/v2/pws/observations/current?stationId=IQUEZO26&format=json&units=m&apiKey=9d4f41efcb5647a58f41efcb56d7a5d3&numericPrecision=decimal";
 
 // Time
 String timeStamp = "";
