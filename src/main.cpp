@@ -18,25 +18,30 @@
 void receivedCallback( const uint32_t &from, const String &msg );
 void newConnectionCallback(uint32_t nodeId);
 void changedConnectionCallback();
+void nodeDelayReceivedCallback(uint32_t from, int32_t delay);
+void measureDelay();
+void sdCreateFile(const char* fileName);
 void sinkNodeElection();
 void broadcastRSSI();
 void connectToWifi();
 void writeFile(fs::FS &fs, const char * path, const char * message);
+void appendFile(fs::FS &fs, const char * path, const char * message);
 void sendMessage();
 
 Task taskBroadcastRSSI (TASK_SECOND * 10, TASK_FOREVER, &broadcastRSSI);
-Task taskSinkNodeElection (TASK_SECOND * 60, TASK_FOREVER, &sinkNodeElection );
+Task taskMeasureDelay (TASK_SECOND * 30, TASK_FOREVER, &measureDelay);
 
 painlessMesh  mesh;
 Scheduler userScheduler;
 
 int my_rssi = 0;
-int mesh_size = 3;
+int mesh_size = 4;
 String nodeRSSIString = "";
 std::map<uint32_t, int> nodeRSSIMap;
 uint32_t target = 0;
 bool sne_done = false;
 bool isConnected = false;
+String delayString;
 
 void setup() {
   Serial.begin(115200);
@@ -46,7 +51,7 @@ void setup() {
     Serial.println("Card Mount Failed");
   }
 
-  File file = SD.open("/NodeID_RSSI1.txt");
+  File file = SD.open("/NodeID_RSSI.txt");
   if(!file) {
     WiFi.begin(STATION_SSID, STATION_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {}
@@ -85,9 +90,10 @@ void setup() {
   mesh.onReceive(&receivedCallback);
   mesh.onNewConnection(&newConnectionCallback);
   mesh.onChangedConnections(&changedConnectionCallback);
+  mesh.onNodeDelayReceived(&nodeDelayReceivedCallback);
 
   userScheduler.addTask( taskBroadcastRSSI );
-  userScheduler.addTask( taskSinkNodeElection );
+  userScheduler.addTask( taskMeasureDelay );
 
   if(!sne_done) {
     while(mesh.getNodeList().size() + 1 != mesh_size) {
@@ -101,9 +107,6 @@ void setup() {
 
 void loop() {
   mesh.update();
-  if(!taskSinkNodeElection.isEnabled()){
-    taskSinkNodeElection.enableDelayed(60000);
-  }
 }
 
 void receivedCallback( const uint32_t &from, const String &msg ) {
@@ -120,6 +123,27 @@ void newConnectionCallback(uint32_t nodeId) {
 
 void changedConnectionCallback() {
   Serial.printf("Changed connections\n");
+}
+
+void nodeDelayReceivedCallback(uint32_t from, int32_t delay) {
+  delayString = String(delay) + "\r\n";
+  if(from == 123456789) {
+    appendFile(SD, "/Subroom2DelayLog.txt", delayString.c_str());
+  }
+  else if (from == 223456789) {
+    appendFile(SD, "/Subroom1DelayLog.txt", delayString.c_str());
+  }
+  else if (from == 323456789) {
+    appendFile(SD, "/OutdoorDelayLog.txt", delayString.c_str());
+  }
+}
+
+void measureDelay() {
+  if (mesh.startDelayMeas(target)) {
+    Serial.printf("Started delay measurement to node %u\n", target);
+  } else {
+    Serial.printf("Failed to start delay measurement to node %u\n", target);
+  }
 }
 
 void broadcastRSSI() {
@@ -161,17 +185,48 @@ void writeFile(fs::FS &fs, const char * path, const char * message) {
   file.close();
 }
 
-void sinkNodeElection() {
-  nodeRSSIMap.insert({mesh.getNodeId(), my_rssi});
-  
-  while (nodeRSSIMap.size() != mesh_size) {
-    taskBroadcastRSSI.enableIfNot();
-    mesh.update();
+void appendFile(fs::FS &fs, const char * path, const char * message) {
+  Serial.printf("Appending to file: %s\n", path);
+
+  File file = fs.open(path, FILE_APPEND);
+  if(!file) {
+    Serial.println("Failed to open file for appending");
+    return;
+  }
+  if(file.print(message)) {
+    Serial.println("Message appended");
+  } else {
+    Serial.println("Append failed");
+  }
+  file.close();
+}
+
+void sdCreateFile(const char* fileName) {
+  // Initialize SD Card
+  while (!SD.begin(0)) {
+    Serial.println("Card Mount Failed");
   }
 
-  if(!sne_done) {
-    taskBroadcastRSSI.enableIfNot();
-    taskBroadcastRSSI.setInterval(30000);
+  File file = SD.open(fileName);
+
+  if(!file) {
+    Serial.println("File doesn't exist");
+    Serial.println("Creating delay log file...");
+    writeFile(SD, fileName, "Delay Time \r\n");
+  }
+  else {
+    Serial.println("File already exists");  
+  }
+
+  file.close();
+}
+
+void sinkNodeElection() {
+  nodeRSSIMap.insert({mesh.getNodeId(), my_rssi});
+  taskBroadcastRSSI.enable();
+  
+  while (nodeRSSIMap.size() != mesh_size) {
+    mesh.update();
   }
 
   int maxRSSI = INT_MIN; // Initialize to the smallest possible integer
@@ -179,50 +234,48 @@ void sinkNodeElection() {
   // Iterate through the map
   for (const auto& pair : nodeRSSIMap) {
     nodeRSSIString = nodeRSSIString + String(pair.first) + ":" + String(pair.second) + ",";
-    Serial.println(nodeRSSIString);
 
     // Check if the current RSSI is greater than the maximum RSSI found so far
     if (pair.second > maxRSSI) {
       // Update the maximum RSSI and corresponding node ID
-      if(pair.first == mesh.getNodeId() || (mesh.isConnected(pair.first))) {
-        maxRSSI = pair.second;
-        target = pair.first;
-      }
+      maxRSSI = pair.second;
+      target = pair.first;
     }
     else if (pair.second == maxRSSI) {
       if (pair.first < target) {
-        if(pair.first == mesh.getNodeId() || mesh.isConnected(pair.first)){target = pair.first;}
+        target = pair.first;
       }
     }
   }
 
-  sne_done = true;
   Serial.println("Sink node election done!");
   Serial.println("Sink node is " + String(target));
 
-  File file = SD.open("/NodeID_RSSI1.txt");
+  File file = SD.open("/NodeID_RSSI.txt");
 
   if(!file) {
     Serial.println("File doesn't exist");
     Serial.println("Creating file...");
-    writeFile(SD, "/NodeID_RSSI1.txt", nodeRSSIString.c_str());
+    writeFile(SD, "/NodeID_RSSI.txt", nodeRSSIString.c_str());
   }
   else {
-    Serial.println("File already exists");  
+    Serial.println("File already exists");
   }
 
   file.close();
 
-  nodeRSSIString = "";
-
   if(mesh.getNodeId() == target) {
-    if(!isConnected) {connectToWifi();}
+    // if(!isConnected) {connectToWifi();}
     digitalWrite(10, HIGH);
+    sdCreateFile("/Subroom2DelayLog.txt");
+    sdCreateFile("/Subroom1DelayLog.txt");
+    sdCreateFile("/OutdoorDelayLog.txt");
   }
 
   else {
-    sendMessage();
-    mesh.sendBroadcast("My sink node is " + String(target));
+    // sendMessage();
     digitalWrite(10, LOW);
+    mesh.sendBroadcast("My sink node is " + String(target));
+    taskMeasureDelay.enable();
   }
 }
