@@ -225,7 +225,7 @@ void INA219_read() {
 
 void SD_log() {
   //Concatenate all info separated by commas
-  dataMessage = String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + ", " + String(busvoltage) + ", " + String(power_mW) + "\r\n";
+  dataMessage = String(ambientTemperature) + ", " + String(ambientHumidity) + ", " + String(CO2) + ", " + String(TVOC) + ", " + String(massConcentrationPm2p5) + ", " + String(massConcentrationPm10p0) + "\r\n";
   Serial.print("Saving data: ");
   Serial.println(dataMessage);
 
@@ -323,7 +323,7 @@ void setup() {
     if(!file) {
       Serial.println("File doesn't exist");
       Serial.println("Creating file...");
-      writeFile(SD, "/log.txt", "Temperature (°C), Humidity (%), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm), Voltage (V), Power (mW) \r\n");
+      writeFile(SD, "/log.txt", "Temperature (°C), Humidity (%), CO2 (ppm), TVOC (ppb), PM2.5 (ppm), PM10 (ppm) \r\n");
     }
     else {
       Serial.println("File already exists");  
