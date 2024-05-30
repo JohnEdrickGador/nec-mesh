@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <painlessMesh.h>
 #include <WiFi.h>
 #include <map>
@@ -109,15 +110,21 @@ void setup() {
   if(mesh.getNodeId() == target) {
     // if(!isConnected) {connectToWifi();}
     digitalWrite(10, HIGH);
-    sdCreateFile("/Node16DelayLog.txt");
-    sdCreateFile("/Node17DelayLog.txt");
-    sdCreateFile("/Node21DelayLog.txt");
   }
 
   else {
     // sendMessage();
     digitalWrite(10, LOW);
     mesh.sendBroadcast("My sink node is " + String(target));
+    if(mesh.getNodeId() == 1974061657) {
+      sdCreateFile("/Node16DelayLog.txt");
+    }
+    else if (mesh.getNodeId() == 1973094313) {
+      sdCreateFile("/Node17DelayLog.txt");
+    }
+    else if (mesh.getNodeId() == 1973938737) {
+      sdCreateFile("/Node21DelayLog.txt");
+    }
     taskMeasureDelay.enable();
   }
 }
@@ -145,13 +152,13 @@ void changedConnectionCallback() {
 void nodeDelayReceivedCallback(uint32_t from, int32_t delay) {
   delayString = String(delay) + "\r\n";
   Serial.println(delayString);
-  if(from == 1974061657) {
+  if(mesh.getNodeId() == 1974061657) {
     appendFile(SD, "/Node16DelayLog.txt", delayString.c_str());
   }
-  else if (from == 1973094313) {
+  else if (mesh.getNodeId() == 1973094313) {
     appendFile(SD, "/Node17DelayLog.txt", delayString.c_str());
   }
-  else if (from == 1973938737) {
+  else if (mesh.getNodeId() == 1973938737) {
     appendFile(SD, "/Node21DelayLog.txt", delayString.c_str());
   }
 }
