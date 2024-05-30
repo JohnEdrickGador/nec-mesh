@@ -102,18 +102,7 @@ void setup() {
     Serial.println("All nodes connected!");
   }
 
-  File file2 = SD.open("/NodeID.txt");
-
-  if(!file2) {
-    Serial.println("File doesn't exist");
-    Serial.println("Creating Node ID log file...");
-    writeFile(SD, "/NodeID.txt", String(mesh.getNodeId()).c_str());
-  }
-  else {
-    Serial.println("File already exists");  
-  }
-
-  file2.close();
+  Serial.println(mesh.getNodeId());
 
   sinkNodeElection();
 }
