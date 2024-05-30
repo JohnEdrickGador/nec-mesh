@@ -38,7 +38,7 @@ int my_rssi = 0;
 int mesh_size = 4;
 String nodeRSSIString = "";
 std::map<uint32_t, int> nodeRSSIMap;
-uint32_t target = 0;
+uint32_t target = 1973197521;
 bool sne_done = false;
 bool isConnected = false;
 String delayString;
@@ -51,38 +51,38 @@ void setup() {
     Serial.println("Card Mount Failed");
   }
 
-  File file = SD.open("/NodeID_RSSI.txt");
-  if(!file) {
-    WiFi.begin(STATION_SSID, STATION_PASSWORD);
-    while (WiFi.status() != WL_CONNECTED) {}
-    Serial.println("Connected to WiFi!");
-    my_rssi = WiFi.RSSI();
-    WiFi.disconnect();
-    Serial.println(my_rssi);
-  }
-  else {
-    sne_done = true;
-    String numberString = "";
-    int nodeID = 0;
-    int RSSI = 0;
-    while (file.available()) {
-      char c = file.read();
-      if (c == ':') {
-        nodeID = numberString.toInt();
-        Serial.println(nodeID);
-        numberString = "";
-      } else if (c == ',') {
-        RSSI = numberString.toInt();
-        Serial.println(RSSI);
-        numberString = "";
-        nodeRSSIMap.insert({nodeID, RSSI});
-      } 
-      else {
-        numberString = numberString + c;
-      }
-    }
-  }
-  file.close();
+  // File file = SD.open("/NodeID_RSSI.txt");
+  // if(!file) {
+  //   WiFi.begin(STATION_SSID, STATION_PASSWORD);
+  //   while (WiFi.status() != WL_CONNECTED) {}
+  //   Serial.println("Connected to WiFi!");
+  //   my_rssi = WiFi.RSSI();
+  //   WiFi.disconnect();
+  //   Serial.println(my_rssi);
+  // }
+  // else {
+  //   sne_done = true;
+  //   String numberString = "";
+  //   int nodeID = 0;
+  //   int RSSI = 0;
+  //   while (file.available()) {
+  //     char c = file.read();
+  //     if (c == ':') {
+  //       nodeID = numberString.toInt();
+  //       Serial.println(nodeID);
+  //       numberString = "";
+  //     } else if (c == ',') {
+  //       RSSI = numberString.toInt();
+  //       Serial.println(RSSI);
+  //       numberString = "";
+  //       nodeRSSIMap.insert({nodeID, RSSI});
+  //     } 
+  //     else {
+  //       numberString = numberString + c;
+  //     }
+  //   }
+  // }
+  // file.close();
 
   mesh.setDebugMsgTypes( ERROR | STARTUP | CONNECTION );  // set before init() so that you can see startup messages
 
@@ -92,19 +92,34 @@ void setup() {
   mesh.onChangedConnections(&changedConnectionCallback);
   mesh.onNodeDelayReceived(&nodeDelayReceivedCallback);
 
-  userScheduler.addTask( taskBroadcastRSSI );
+  // userScheduler.addTask( taskBroadcastRSSI );
   userScheduler.addTask( taskMeasureDelay );
 
-  if(!sne_done) {
-    while(mesh.getNodeList().size() + 1 != mesh_size) {
-      mesh.update();
-    }
-    Serial.println("All nodes connected!");
-  }
+  // if(!sne_done) {
+  //   while(mesh.getNodeList().size() + 1 != mesh_size) {
+  //     mesh.update();
+  //   }
+  //   Serial.println("All nodes connected!");
+  // }
 
   Serial.println(mesh.getNodeId());
 
-  sinkNodeElection();
+  // sinkNodeElection();
+
+  if(mesh.getNodeId() == target) {
+    // if(!isConnected) {connectToWifi();}
+    digitalWrite(10, HIGH);
+    sdCreateFile("/Node16DelayLog.txt");
+    sdCreateFile("/Node17DelayLog.txt");
+    sdCreateFile("/Node21DelayLog.txt");
+  }
+
+  else {
+    // sendMessage();
+    digitalWrite(10, LOW);
+    mesh.sendBroadcast("My sink node is " + String(target));
+    taskMeasureDelay.enable();
+  }
 }
 
 void loop() {
@@ -129,6 +144,7 @@ void changedConnectionCallback() {
 
 void nodeDelayReceivedCallback(uint32_t from, int32_t delay) {
   delayString = String(delay) + "\r\n";
+  Serial.println(delayString);
   if(from == 1974061657) {
     appendFile(SD, "/Node16DelayLog.txt", delayString.c_str());
   }
