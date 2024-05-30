@@ -116,15 +116,15 @@ void setup() {
     // sendMessage();
     digitalWrite(10, LOW);
     mesh.sendBroadcast("My sink node is " + String(target));
-    if(mesh.getNodeId() == 1973905665) {
-      sdCreateFile("/Node6DelayLog.txt");
+    if(mesh.getNodeId() == 989873501) {
+      sdCreateFile("/Node12DelayLog.txt");
     }
-    else if (mesh.getNodeId() == 1973949497) {
-      sdCreateFile("/Node7DelayLog.txt");
-    }
-    else if (mesh.getNodeId() == 1973953609) {
-      sdCreateFile("/Node8DelayLog.txt");
-    }
+    // else if (mesh.getNodeId() == 1973949497) {
+    //   sdCreateFile("/Node7DelayLog.txt");
+    // }
+    // else if (mesh.getNodeId() == 1973953609) {
+    //   sdCreateFile("/Node8DelayLog.txt");
+    // }
     taskMeasureDelay.enable();
   }
 }
