@@ -123,7 +123,7 @@ void setup() {
       sdCreateFile("/Node17DelayLog.txt");
     }
     else if (mesh.getNodeId() == 1973938737) {
-      sdCreateFile("/Node18DelayLog.txt");
+      sdCreateFile("/Node21DelayLog.txt");
     }
     taskMeasureDelay.enable();
   }
@@ -159,7 +159,7 @@ void nodeDelayReceivedCallback(uint32_t from, int32_t delay) {
     appendFile(SD, "/Node17DelayLog.txt", delayString.c_str());
   }
   else if (mesh.getNodeId() == 1973938737) {
-    appendFile(SD, "/Node18DelayLog.txt", delayString.c_str());
+    appendFile(SD, "/Node21DelayLog.txt", delayString.c_str());
   }
 }
 
