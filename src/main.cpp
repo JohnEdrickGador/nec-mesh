@@ -6,8 +6,8 @@
 #include <SD.h>
 
 #define   WIFI_CHANNEL    1 //Check the access point on your router for the channel - 6 is not the same for everyone
-#define   MESH_PREFIX     "NEC_1ST_FLOOR"
-#define   MESH_PASSWORD   "AUDIO_VISUAL_ROOM"
+#define   MESH_PREFIX     "NEC_4TH_FLOOR"
+#define   MESH_PASSWORD   "CARE_OFFICE"
 #define   MESH_PORT       5555
 
 #define   STATION_SSID     "CARE_407"
@@ -39,7 +39,7 @@ int my_rssi = 0;
 int mesh_size = 4;
 String nodeRSSIString = "";
 std::map<uint32_t, int> nodeRSSIMap;
-uint32_t target = 1973920277;
+uint32_t target = 1973197521;
 bool sne_done = false;
 bool isConnected = false;
 String delayString;
@@ -116,15 +116,15 @@ void setup() {
     // sendMessage();
     digitalWrite(10, LOW);
     mesh.sendBroadcast("My sink node is " + String(target));
-    if(mesh.getNodeId() == 1974037193) {
-      sdCreateFile("/Node2DelayLog.txt");
+    if(mesh.getNodeId() == 1974061657) {
+      sdCreateFile("/Node16DelayLog.txt");
     }
-    else if (mesh.getNodeId() == 1974033141) {
-      sdCreateFile("/Node4DelayLog.txt");
+    else if (mesh.getNodeId() == 1973094313) {
+      sdCreateFile("/Node17DelayLog.txt");
     }
-    // else if (mesh.getNodeId() == 1973953609) {
-    //   sdCreateFile("/Node8DelayLog.txt");
-    // }
+    else if (mesh.getNodeId() == 1973938737) {
+      sdCreateFile("/Node18DelayLog.txt");
+    }
     taskMeasureDelay.enable();
   }
 }
@@ -152,15 +152,15 @@ void changedConnectionCallback() {
 void nodeDelayReceivedCallback(uint32_t from, int32_t delay) {
   delayString = String(delay) + "\r\n";
   Serial.println(delayString);
-  if(mesh.getNodeId() == 1974037193) {
-    appendFile(SD, "/Node2DelayLog.txt", delayString.c_str());
+  if(mesh.getNodeId() == 1974061657) {
+    appendFile(SD, "/Node16DelayLog.txt", delayString.c_str());
   }
-  else if (mesh.getNodeId() == 1974033141) {
-    appendFile(SD, "/Node4DelayLog.txt", delayString.c_str());
+  else if (mesh.getNodeId() == 1973094313) {
+    appendFile(SD, "/Node17DelayLog.txt", delayString.c_str());
   }
-  // else if (mesh.getNodeId() == 1973953609) {
-  //   appendFile(SD, "/Node8DelayLog.txt", delayString.c_str());
-  // }
+  else if (mesh.getNodeId() == 1973938737) {
+    appendFile(SD, "/Node18DelayLog.txt", delayString.c_str());
+  }
 }
 
 void measureDelay() {
