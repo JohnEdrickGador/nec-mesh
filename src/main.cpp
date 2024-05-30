@@ -4,9 +4,9 @@
 #include <SPI.h>
 #include <SD.h>
 
-#define   WIFI_CHANNEL    6 //Check the access point on your router for the channel - 6 is not the same for everyone
-#define   MESH_PREFIX     "test"
-#define   MESH_PASSWORD   "password"
+#define   WIFI_CHANNEL    1 //Check the access point on your router for the channel - 6 is not the same for everyone
+#define   MESH_PREFIX     "NEC_1ST_FLOOR"
+#define   MESH_PASSWORD   "CARE_OFFICE"
 #define   MESH_PORT       5555
 
 #define   STATION_SSID     "CARE_407"
@@ -29,7 +29,7 @@ void appendFile(fs::FS &fs, const char * path, const char * message);
 void sendMessage();
 
 Task taskBroadcastRSSI (TASK_SECOND * 10, TASK_FOREVER, &broadcastRSSI);
-Task taskMeasureDelay (TASK_SECOND * 30, TASK_FOREVER, &measureDelay);
+Task taskMeasureDelay (TASK_SECOND * 10, TASK_FOREVER, &measureDelay);
 
 painlessMesh  mesh;
 Scheduler userScheduler;
@@ -102,6 +102,19 @@ void setup() {
     Serial.println("All nodes connected!");
   }
 
+  File file2 = SD.open("/NodeID.txt");
+
+  if(!file2) {
+    Serial.println("File doesn't exist");
+    Serial.println("Creating Node ID log file...");
+    writeFile(SD, "/NodeID.txt", String(mesh.getNodeId()).c_str());
+  }
+  else {
+    Serial.println("File already exists");  
+  }
+
+  file2.close();
+
   sinkNodeElection();
 }
 
@@ -127,14 +140,14 @@ void changedConnectionCallback() {
 
 void nodeDelayReceivedCallback(uint32_t from, int32_t delay) {
   delayString = String(delay) + "\r\n";
-  if(from == 123456789) {
-    appendFile(SD, "/Subroom2DelayLog.txt", delayString.c_str());
+  if(from == 1974061657) {
+    appendFile(SD, "/Node16DelayLog.txt", delayString.c_str());
   }
-  else if (from == 223456789) {
-    appendFile(SD, "/Subroom1DelayLog.txt", delayString.c_str());
+  else if (from == 1973094313) {
+    appendFile(SD, "/Node17DelayLog.txt", delayString.c_str());
   }
-  else if (from == 323456789) {
-    appendFile(SD, "/OutdoorDelayLog.txt", delayString.c_str());
+  else if (from == 1973938737) {
+    appendFile(SD, "/Node21DelayLog.txt", delayString.c_str());
   }
 }
 
@@ -223,7 +236,6 @@ void sdCreateFile(const char* fileName) {
 
 void sinkNodeElection() {
   nodeRSSIMap.insert({mesh.getNodeId(), my_rssi});
-  taskBroadcastRSSI.enable();
   
   while (nodeRSSIMap.size() != mesh_size) {
     mesh.update();
@@ -267,9 +279,9 @@ void sinkNodeElection() {
   if(mesh.getNodeId() == target) {
     // if(!isConnected) {connectToWifi();}
     digitalWrite(10, HIGH);
-    sdCreateFile("/Subroom2DelayLog.txt");
-    sdCreateFile("/Subroom1DelayLog.txt");
-    sdCreateFile("/OutdoorDelayLog.txt");
+    sdCreateFile("/Node16DelayLog.txt");
+    sdCreateFile("/Node17DelayLog.txt");
+    sdCreateFile("/Node21DelayLog.txt");
   }
 
   else {
