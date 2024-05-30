@@ -6,8 +6,8 @@
 #include <SD.h>
 
 #define   WIFI_CHANNEL    1 //Check the access point on your router for the channel - 6 is not the same for everyone
-#define   MESH_PREFIX     "NEC_2ND_FLOOR"
-#define   MESH_PASSWORD   "ADMIN_OFFICE"
+#define   MESH_PREFIX     "NEC_3RD_FLOOR"
+#define   MESH_PASSWORD   "SEMINAR_ROOM"
 #define   MESH_PORT       5555
 
 #define   STATION_SSID     "CARE_407"
@@ -39,7 +39,7 @@ int my_rssi = 0;
 int mesh_size = 4;
 String nodeRSSIString = "";
 std::map<uint32_t, int> nodeRSSIMap;
-uint32_t target = 1973942425;
+uint32_t target = 1973941917;
 bool sne_done = false;
 bool isConnected = false;
 String delayString;
