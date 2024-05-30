@@ -6,8 +6,8 @@
 #include <SD.h>
 
 #define   WIFI_CHANNEL    1 //Check the access point on your router for the channel - 6 is not the same for everyone
-#define   MESH_PREFIX     "NEC_3RD_FLOOR"
-#define   MESH_PASSWORD   "SEMINAR_ROOM"
+#define   MESH_PREFIX     "NEC_1ST_FLOOR"
+#define   MESH_PASSWORD   "AUDIO_VISUAL_ROOM"
 #define   MESH_PORT       5555
 
 #define   STATION_SSID     "CARE_407"
@@ -39,7 +39,7 @@ int my_rssi = 0;
 int mesh_size = 4;
 String nodeRSSIString = "";
 std::map<uint32_t, int> nodeRSSIMap;
-uint32_t target = 1973941917;
+uint32_t target = 1973920277;
 bool sne_done = false;
 bool isConnected = false;
 String delayString;
@@ -119,9 +119,9 @@ void setup() {
     if(mesh.getNodeId() == 989873501) {
       sdCreateFile("/Node12DelayLog.txt");
     }
-    // else if (mesh.getNodeId() == 1973949497) {
-    //   sdCreateFile("/Node7DelayLog.txt");
-    // }
+    else if (mesh.getNodeId() == 1973949497) {
+      sdCreateFile("/Node7DelayLog.txt");
+    }
     // else if (mesh.getNodeId() == 1973953609) {
     //   sdCreateFile("/Node8DelayLog.txt");
     // }
@@ -152,15 +152,15 @@ void changedConnectionCallback() {
 void nodeDelayReceivedCallback(uint32_t from, int32_t delay) {
   delayString = String(delay) + "\r\n";
   Serial.println(delayString);
-  if(mesh.getNodeId() == 1973905665) {
-    appendFile(SD, "/Node6DelayLog.txt", delayString.c_str());
+  if(mesh.getNodeId() == 989873501) {
+    appendFile(SD, "/Node12DelayLog.txt", delayString.c_str());
   }
   else if (mesh.getNodeId() == 1973949497) {
     appendFile(SD, "/Node7DelayLog.txt", delayString.c_str());
   }
-  else if (mesh.getNodeId() == 1973953609) {
-    appendFile(SD, "/Node8DelayLog.txt", delayString.c_str());
-  }
+  // else if (mesh.getNodeId() == 1973953609) {
+  //   appendFile(SD, "/Node8DelayLog.txt", delayString.c_str());
+  // }
 }
 
 void measureDelay() {
