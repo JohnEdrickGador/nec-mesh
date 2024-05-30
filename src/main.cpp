@@ -116,11 +116,11 @@ void setup() {
     // sendMessage();
     digitalWrite(10, LOW);
     mesh.sendBroadcast("My sink node is " + String(target));
-    if(mesh.getNodeId() == 989873501) {
-      sdCreateFile("/Node12DelayLog.txt");
+    if(mesh.getNodeId() == 1974037193) {
+      sdCreateFile("/Node2DelayLog.txt");
     }
-    else if (mesh.getNodeId() == 1973949497) {
-      sdCreateFile("/Node7DelayLog.txt");
+    else if (mesh.getNodeId() == 1974033141) {
+      sdCreateFile("/Node4DelayLog.txt");
     }
     // else if (mesh.getNodeId() == 1973953609) {
     //   sdCreateFile("/Node8DelayLog.txt");
@@ -152,11 +152,11 @@ void changedConnectionCallback() {
 void nodeDelayReceivedCallback(uint32_t from, int32_t delay) {
   delayString = String(delay) + "\r\n";
   Serial.println(delayString);
-  if(mesh.getNodeId() == 989873501) {
-    appendFile(SD, "/Node12DelayLog.txt", delayString.c_str());
+  if(mesh.getNodeId() == 1974037193) {
+    appendFile(SD, "/Node2DelayLog.txt", delayString.c_str());
   }
-  else if (mesh.getNodeId() == 1973949497) {
-    appendFile(SD, "/Node7DelayLog.txt", delayString.c_str());
+  else if (mesh.getNodeId() == 1974033141) {
+    appendFile(SD, "/Node4DelayLog.txt", delayString.c_str());
   }
   // else if (mesh.getNodeId() == 1973953609) {
   //   appendFile(SD, "/Node8DelayLog.txt", delayString.c_str());
